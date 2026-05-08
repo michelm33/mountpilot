@@ -343,3 +343,24 @@ The purpose of MountPilot is to go a step further:
 * to control and manage all mounts the same way via a unified user interface
 * to integrate into one tool the numerous various mount methods that exist for heterogeneous data sources
 * to provide a live interface for monitoring and interacting with active or past mounts
+
+== Supporting the development of the project
+
+Fields of work:
+
+- Making the tool work on other Linux distributions (packaging systems)
+- Other types of OS via Cygwin, Docker, VM or other etc.
+- Extensions and features of the roadmap
+- Multilingual aspects
+
+The software is not open source (not MIT and not GPL for example) and a framework has still to be defined for contributions. Possible solutions: external extensions licensed under MIT/GPL, rewards... Suggestions are welcome!
+
+== Supporting financially the project
+
+The Mountpilot project has been running for over a year and a half, initially as an experimental tool for personal use, which gradually expanded and matured into a tool deemed to be of general interest. It did and does not yet benefit from any sponsorship and can be used free of charge.
+
+You can support the project via PayPal and Patreon. Donors are rewarded with exclusive gifts according the level of their support.
+
+link:https://slashetc.fr/en/products/mountpilot/mountpilot_donate&Gifts.html[Click here for all info and links]
+
+Thank you <3!
