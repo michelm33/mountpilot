@@ -41,7 +41,7 @@ NOTE: See <<Mounting and its benefits>> for more background infos on mount mecha
 
 image::{staticimgdir}/mountpilot_1_presentation_img0.{image_fmt}[role=roundimageborderhighlight,align=center, width=80%,link={staticimgdir}/mountpilot_1_presentation_img0.{image_fmt}]
 
-In its simplest form, a *sumo* command line typically looks as follows (see link:mountpilot_manpage.html[manpages] for details):
+In its simplest form, a *sumo* command line typically looks as follows (see link:https://slashetc.fr/en/products/mountpilot/mountpilot_manpage.html[manpages] for details):
 
 [source,bash]
 ----
@@ -75,7 +75,7 @@ image::{staticimgdir}/console_explained.png[role=roundimageborderhighlight,align
 
 Built upon *BASH*, *AWK* and *standard system tools*, MountPilot is deemed to offer a high compatibility level on most common Linux platforms. At the moment, it mainly works on Debian-based distributions, as it relies on the Debian packaging system to resolve system tool dependencies.
 
-It is supplied as *Debian package* (*.pkg*) and *ZIP package*. See link:mountpilot_download.html[Download page] for further information.
+It is supplied as *Debian package* (*.pkg*) and *ZIP package*. See link:https://slashetc.fr/en/products/mountpilot/mountpilot_download.html[Download page] for further information.
 
 == Demo video
 
@@ -83,7 +83,9 @@ The following video is supplied as sample demo. The dashboard is run on one term
 
 Once unmounted, a new entry for the disk file appears live in the history of the dashboard. From here on, the video shows that the LVM disk can be remounted from the history by pressing {enterkey}. The LVM is unmounted again, this time directly via the dashboard, by pressing {enterkey} on the root entry corresponding to the qcow2 file. Note that individual partitions can also be mounted and unmounted from there.
 
-video::{staticimgdir}/vid_Example_of_LVM_disk_unmounted_from_command_line_and_appearing_live_in_history_of_console.mp4[width=100%, title="LVM in qcow2 disk is mounted and unmounted from command line, appearing live in history of console, then remounted via history", align=center,link={staticimgdir}/vid_Example_of_LVM_disk_unmounted_from_command_line_and_appearing_live_in_history_of_console.mp4]
+link:https://slashetc.fr/en/products/images/bank/original/static/vid_Example_of_LVM_disk_unmounted_from_command_line_and_appearing_live_in_history_of_console.mp4[Video showing LVM disk unmounted from command line and appearing live in the history of the dashboard]
+
+//video::{staticimgdir}/vid_Example_of_LVM_disk_unmounted_from_command_line_and_appearing_live_in_history_of_console.mp4[width=100%, title="LVM in qcow2 disk is mounted and unmounted from command line, appearing live in history of console, then remounted via history", align=center,link={staticimgdir}/vid_Example_of_LVM_disk_unmounted_from_command_line_and_appearing_live_in_history_of_console.mp4]
 
 == Sample _sumo_ commands
 
