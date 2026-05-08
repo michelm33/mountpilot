@@ -1,0 +1,40 @@
+#!/bin/bash
+###############################################################################
+# 
+# MountPilot & sumo backend control script
+# 
+# Copyright (c) 2024-2026 Michel Mehl.
+# All rights reserved. 
+# Tous droits réservés (France).
+# 
+# License terms written down in file LICENSE.txt
+# Les termes de la licence sont détaillés dans le fichier LICENSE.txt
+# 
+# Release file path: mountpilot
+# Release file date: 2026-05-08 15:10
+# Software product version: 2.0.2
+# Source file last modification: 2026-05-01 18:35:22.381244109 +0000
+#
+# This header was generated. Do not modify.
+#
+# ------------------------------------------------------------------------------
+#
+# MountPilot - Monitoring interactive mount list
+#
+# type 'man sumo' for further information.
+#
+# ------------------------------------------------------------------------------
+# 
+# Report bugs and suggestions: 
+#     assistance@slashetc.fr
+# 
+# Specific or corporate requirements or extensions: 
+#     info@slashetc.fr
+# 
+# The author is overall not required to provide maintenance or support 
+# outside specific commercial terms agreed.
+# 
+###############################################################################
+
+MY_DIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+exec "${MY_DIR}/sumo" -i $@

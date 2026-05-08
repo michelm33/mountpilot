@@ -1,0 +1,10 @@
+
+HUMAN-READABLE "BSA BASH SHELL API"
+
+Copyright (c) 2024-2026 Michel Mehl.
+All rights reserved. 
+Tous droits réservés (France).
+
+License terms written down in file MIT_LICENSE.txt
+Les termes de la licence sont détaillés dans le fichier MIT_LICENSE.txt
+

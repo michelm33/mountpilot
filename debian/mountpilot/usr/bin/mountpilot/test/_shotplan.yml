@@ -1,0 +1,1939 @@
+###############################################################################
+#
+# MountPilot
+#
+# Copyright (c) 2024-2025 Michel Mehl. All rights reserved.
+#
+# ------------------------------------------------------------------------------
+#
+# This file contains the test plan for mountpilot/sumo which can be used in
+# the following ways depending on the option passed to the plan processor shotplan.sh:
+#
+# - without any option among those described below:
+#        For generating document parts for the online documentation 
+#        and generating test reports.
+#        An individual plan or a set of plans of a given category or 'all' can be selected.
+#
+# - with option '-T|no-report': 
+#        For running tests only, part of them being automatic and other manual.
+#        An individual plan or a set of plans of a given category or 'all' can be selected.
+#
+# - with option '-M|--manpage' :
+#        For generating the example lines for the manpage
+#
+# - with option '--cat' :
+#        List available categories
+#
+#
+#  When the tests are run to generate document parts and imags, shotplan must run
+#  on the host where the images are stored. The following parameters shall be valid
+#  path on the target host where the tests are run:
+#
+#  image_folder
+#  image_folder2
+#  output-dir
+#
+# ------------------------------------------------------------------------------
+#
+# Report bugs to michel.mehl@slashetc.fr
+#
+###############################################################################
+
+#
+#
+# TODO when generating for online the name of the category shall be generated instead of the chapter name
+# make a mapping between logical category names and readable names
+#
+#
+
+# To find window is, type 'wmctrl -lp' and search the windows with matching title
+application: mountpilot
+release: yes
+lang: "EN.US.UTF-8"
+window_id: "0x026055ae"
+image_folder: /home/michel/siteweb/products/images/mountpilot/
+image_folder2: /home/michel/siteweb.output/output/products/images/bank/original/static/
+output-dir: /home/michel/siteweb/products/pages/mountpilot/shotplan
+
+term-height: 30
+term-width: 110
+environment: |
+
+  - Ensure this test is being run on a dedicated, new terminal to the test running. 
+  - NOTE: Term must have been opened at last. Finding of Window Id for screenshot depends on it
+
+  - Ensure the following sticks are inserted (in that order):
+
+     /dev/sdb : Big 8 Go stick:  rewritable usb stick e.g. used for flashing and formating disk
+     /dev/sdc,/dev/sdc1 : SanDisk 16 Go : read-only photos stick. Stick named :'photos', 
+     /dev/sdd,/dev/sdd1 : 'Repair 32 bits' stick reserved for encrypted volumes, may be rewritable. 
+
+  - when not testing interactive mode, run mountpilot in ghost mode in a separate terminal 
+    to check if data sources appear properly in mounted item list and history.
+    It can also be used to create encrypted USB stick needed for the tests
+   
+  - Setup the local_test_vars.sh located inside the <sumo install dir>/test. This sets up local parameters:
+    * local ethernet interface name used to connect with windows host
+    * Address and credentials of the FTP site used for the test of the FTP mounting
+  
+  - Before starting history test, unmount and unplug the above listed sticks
+    + adb device to save space at the screen bottom
+  - If tests need to be adapted, they can be run manually, optionally from a start plan:
+
+    source "$HOME/sumodev/test/local_test_vars.sh" # Set your own local sumo dir path here
+    gnome-terminal --geometry 150x50+0+0 --title="mountpilot"  --wait --command="bash -c 'source ${SUMO_TEST_DIR}/local_test_vars.sh && shotplan.sh ${SUMO_TEST_DIR}/_shotplan.yml --force-defaults -C all -y -i --from=switchhist'"
+
+  - Preexisting disk image files must exist and have been created before inside ~/test_sumo: 
+    imgdisk.img
+    imgdisk.qcow2 containing a file 'file.txt'
+    veradisk.vera with a file 'test.txt'
+
+pretest-script: pretest.sh
+postest-script: posttest.sh
+
+shotplan:
+  list:
+    _categories: ["mount-command-line", "automatic"]
+    _ignore-comment-for-manpage: yes
+    _information: |
+      Before running the 'list' tests, ensure the following environment is set:
+      - there's an adb device connected ('adb devices' reports a valid device)
+      - there's a docker container running, e.g. 
+        sudo docker run --mount type=bind,src=/home/michel/,dst=/home/michel -it ubuntu bash
+    _term-height: 30
+    _term-width: 110
+    _title: |
+      Examples of list commands
+    1:
+      name: Default List (everything but loop devices and docker overlays)
+      command : |
+          sumo -l
+      comment: |
+          Here the list shows up the SSD of the running laptop (SATA interface) mapped to system device `/dev/sda` and 
+          a connected USB key mapped to `/dev/sdb`. 
+
+          The SDD features a dual boot system containing of 5 partitions, where Windows is installed on 2nd, 3rd and 4th partitions, and Linux on 5th (/dev/sda5).
+          
+          The Windows data partition and Linux partitions are labeled resp. `WINDOWS11` and `UBUNTU20-dell`
+          
+          The USB key is labeled `Boot-Repair-Disk 64bit`.
+
+    2:
+      name: List all except loop devices
+      command : |
+          sumo -l noloop
+      comment: |
+          This example is highlighted only for demonstration purposes to show what executes the default list. 
+    3:
+      name: List only real disks
+      command : | 
+          sumo -l disk
+      comment: |
+        The list here shows only the actual disks, i.e. the SSD of the running laptop (SATA interface) and the USB key as described
+        in the first example.
+    4:
+      name: List only NTFS partitions
+      command : | 
+          sumo -l ntfs
+      comment: |
+    5:
+      name: List by searching the string 'adb'.
+      command : | 
+          sumo -l adb
+      comment: | 
+        This example highlights how to list data sources which file system name or/and location string contains the string 'adb'.
+    6:
+      name: List all available data sources incl. loop
+      _term-width: 120 
+      _term-height: 57      
+      command : | 
+          sumo -l all
+      comment: |
+        This example highlights how to list absolutely all available data sources of any type, inclusive loop devices.
+    7:
+      name: Default list using the 'bgcolor' display format
+      command : | 
+          sumo -l --display-format=bgcolor
+      comment: |
+    8:
+      name: Default list using the 'color' display format
+      command : | 
+          sumo -l --display-format=color
+      comment: |
+
+  mntpoint:
+    _categories: ["destination-mount-folder"]
+    _ignore-for-manpage: yes
+    _title: |
+      Usage for destination mount folders
+    1:
+        name: Mounting on an existing folder
+        pre-command-display: 
+        pre-command: |
+            mkdir ~/test_sumo/photosDir || echo "~/test_sumo/photosDir  already exists"
+            echo hello >  ~/test_sumo/photosDir/hellofile.txt
+        command-display : |
+            Folder already exists
+        command : |
+            sumo -L photos ~/test_sumo/photosDir
+        post-command-display: 
+            Here mounting a USB key labeled 'photos' on the existing folder ~/test_sumo/photosDir created by this test beforehand.
+        post-command: |
+            ls  ~/test_sumo/photosDir
+            sleep 2
+            sumo -u -L photos 
+            rm -r  ~/test_sumo/photosDir
+        comment: |
+            When mounting on an existing folder which is not empty, the mounted content will mask the previous content and not change it.
+    2:
+        name: Mounting on a non-existing folder
+        pre-command-display:
+        pre-command:
+        command-display : |
+            Folder does not exist
+        command : |            
+            cd  ~/test_sumo/
+            sumo -y -L photos
+        post-command-display: | 
+          Here mounting a USB key labeled 'photos'. The default mount folder name is 'photos' and 
+          is automatically created thanks to the `-y` option.
+        post-command: |
+            ls ./photos # We known the device was labeled 'photos'
+            sleep 2
+            sumo -u -L photos 
+        comment: |
+            When mounting on a folder which does not exit yet, a default one is proposed in the current working directory as follows:
+
+                * If a label is associated with the data source, a folder which the name is the label
+
+                * In absence of any label, a folder holding the name of the last path component of the data source (e.g. `sdc1` when device is `/sdc/sdc1`)
+
+            The user accepts the default value by typing {enterkey} or by entering a name of its own.
+
+            If option `-y` is specified, the folder is created automatically using default value without prompting the user.
+
+    3:
+        name: Mounting on a folder which the data source is already mounted on
+        pre-command-display:
+        pre-command:
+        command-display : |
+            Data source already mounted on the same folder
+        command : |
+            cd  ~/test_sumo/
+            sumo -s -y -L photos
+            sleep 1
+            sumo -s -y -L photos
+        post-command-display: |
+          Here mounting twice the USB key labeled 'photos' using the proposed default value.
+          At the end, the two mounts are removed (unmounted) using option `-a`.
+        post-command: |
+            ls ./photos
+            ls ./photos:1
+            sleep 2
+            sumo -a -u -L photos
+        comment: |
+            When mounting on an existing folder which is the same data source is already mounted on, 
+            the default proposed destination folder will be supplemented with an index.
+
+  mntlabel:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting using a system label
+    _usage: "sumo [OPTIONS] -L|--label= <volume label> [<mount folder>]"
+    1:
+      name: Example of mounting by system label
+      command : |
+          sumo -y -L photos ./photosDir
+      post-command-display: 
+      post-command: |
+          ls ./photosDir
+          sleep 2
+          sumo -u -L photos
+      comment: |
+          An USB stick labeled 'photos' is mounted on the folder 'photosDir' and its content listed. 
+          At the end, the device is unmounted using the label as well.
+
+  mntro:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a data source read-only
+    _usage: sumo [OPTIONS] -o ro <data source> [<mount folder>]
+    1:
+      name: Example of mounting a data source read-only
+      command : |
+          sumo -o ro -y -L photos ./photosDir
+      post-command-display: 
+      post-command: |
+          ls ./photosDir
+          touch photosDir/stick_should_not_be_writable.txt 2>/dev/null || echo "OK, test file could not be written"
+          sleep 2
+          sumo -u -L photos
+      comment: |
+          A USB stick labeled 'photos' is mounted read-only on the folder 'photosDir'. 
+          When the USB stick source is listed after its mounting, the round 'forbidden' symbol is shown.
+          An attempt is made to write a file on it, which must not succeed.
+
+  mntblk:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a block device
+    _usage: sumo [OPTIONS] <block device path> [<mount folder>]
+    1:
+      name: Example of mounting of a block device
+      command : |
+          sumo -y /dev/sdb ./DebianInstall
+      post-command-display: 
+      post-command: |
+          ls ./DebianInstall
+          sleep 2
+          sumo -u /dev/sdb 
+      comment: |
+          An USB key contains a flashed image of a Debian installation image.
+          There is no partition. The stick is mounted and its content listed. 
+          At the end, the device is unmounted using the device path.
+
+  mntpart:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a partition
+    _usage: sumo [OPTIONS] <partition device path> [<mount folder>]
+    1:
+      name: Example of mounting of a partition
+      command : |
+          sumo -y /dev/sdc1 ./photosDir
+      post-command-display: 
+      post-command: |
+          ls ./photosDir
+          sleep 2
+          sumo -u /dev/sdc1 
+      comment: |
+          An USB key which partition is mapped to device `/dev/sdc1` is mounted on the folder 'photosDir'. 
+          The content folder is listed. At the end, the device is unmounted using the device path.
+
+  mntoverlay:
+    _categories: ["mount-command-line", "automatic"]
+    _term-height: 50
+    _title: |
+      Mounting an overlay file system
+    _usage: sumo [OPTIONS] <overlay path> [<mount folder>]
+    _usage-info: |
+      where `<overlay path>` is of the form: _upper_dir_>__lower_dir__  +
+      where the upper directory and the lower directory are separated by '>'. +
+      When there are multiple lower dirs, the lowest is always put at the right most position and all dirs are separated by '>' as well. 
+    1:
+      name: Example of mounting of an overlay file system
+      pre-command-display:
+      pre-command: |
+        pushd ~/test_sumo/overlay &> /dev/null
+        mkdir demoLowerDir || echo "demoLowerDir exists" &> /dev/null
+        echo -n "File of the lower FS" > demoLowerDir/lowerdir_file.txt
+        mkdir demoUpperDir || echo "demoLowerDir exists" &> /dev/null
+        echo -n "File of the upper FS" > demoUpperDir/upperdir_file.txt
+      command-display : |
+       sumo "<upperdir>><lowerdir>[><lowerdir>]*" [target folder]
+      command : |
+        sumo -y 'demoUpperDir>demoLowerDir' overlayDir
+      post-command-display: 
+      post-command: |
+        echo -n "Changed file for overlay" > overlayDir/lowerdir_file.txt
+        echo -n "Changed file for overlay" > overlayDir/upperdir_file.txt
+        ls overlayDir/
+        sleep 1
+        sumo -u 'demoUpperDir>demoLowerDir'
+        echo "Testing lowerdir file content (lowerdir_file): $(cat demoLowerDir/lowerdir_file.txt)"
+        test "$(cat demoLowerDir/lowerdir_file.txt)" = "File of the lower FS"
+        echo "Testing upperdir file content (upperdir_file): $(cat demoUpperDir/upperdir_file.txt)"
+        test "$(cat demoUpperDir/upperdir_file.txt)" = "Changed file for overlay"
+
+        sumo -y 'demoUpperDir>demoLowerDir' overlayDir
+        echo "Testing lowerdir file content (lowerdir_file): $(cat overlayDir/lowerdir_file.txt)"
+        test "$(cat overlayDir/lowerdir_file.txt)" = "Changed file for overlay"
+        echo "Testing upperdir file content (upperdir_file): $(cat overlayDir/upperdir_file.txt)"
+        test "$(cat overlayDir/upperdir_file.txt)" = "Changed file for overlay"
+        sleep 1
+        sumo -u 'demoUpperDir>demoLowerDir'
+
+        popd &> /dev/null
+      comment: |
+        An overlay FS is created where 'demoUpperDir' is the overlaying upper dir and 'demoLowerDir' the overlaid lower dir.
+        Both files 'lowerdir_file.txt' of the lower dir and 'upperdir_file.txt' of the upper dir are modified.
+        After unmounting, it is checked that the file of the upper dir holds
+        the modifications, whilst the file of the lower dir is unchanged.
+        After remounting, it is checked that the files of the mounted overlay dir 
+        still contains the modifications.
+
+  mntadb:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting an Android device via adb
+    _usage: sumo [OPTIONS] adb://usb [<mount folder>]
+    _usage-info: |
+       TODO exlain prerequesites
+    1:
+      name: Example of mounting an Android device via adb
+      command-display : |
+          sumo adb://usb
+      command : |
+          sumo -y adb://usb  ~/test_sumo/adb
+      post-command-display: 
+      post-command: |
+          ls ~/test_sumo/adb
+          sleep 7 # a delay is required because there may be some latency
+          sumo -u ~/test_sumo/adb
+      comment: |
+          An Android tablet is mounted on folder '~/test_sumo/adb'.
+          The folder content is listed. At the end, the folder is unmounted.
+
+  mntnfs:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a NFS shared directory
+    _usage: sumo [OPTIONS] <NFS URL> [<mount folder>]
+    _usage-info: |
+      where `<NFS URL>` is of the form: nfs://_host_:__remote directory path__ +
+      The client-side and server-side *NFS mount options* can be controlled by *configuration*. See section <<NFS setup and mount options>>
+    1:
+      name: Example of mounting of a NFS shared directory
+      command-display : |
+          sumo [nfs://]<host>:<dirpath> [target folder]
+      command : |
+          sumo -y 192.168.0.12:/home/michel testNFSDir
+      post-command-display: 
+      post-command: |
+          ls testNFSDir/mnt
+          sumo -u testNFSDir
+      comment: |
+          The remote home of another host is mounted on folder 'testNFSDir'.
+          The folder content of remote 'mnt' folder is listed.
+          At the end, the NFS share is unmounted using the mounted folder itself.
+
+  mntssh:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a remote directory via SSH
+    _usage: sumo [OPTIONS] <SSH URL> [<mount folder>] 
+    _usage-info: |
+      where `<SSH URL>` is of the form: [ssh://]_login_@_host_[:_port_] +
+      The client-side *SSHFS mount options* can be tuned by *configuration*. See section <<SSH setup and mount options>>
+    1:
+      name: Example of mounting of remote directory via SSH
+      command-display : |
+          sumo [ssh://]<login>@<host>:[<port>]/<path> [target folder]
+          or
+          sumo <login>@<host>[:<path>] [target folder]
+      command : |
+          sumo -y ${SSHLOGIN}@${SSHHOST}:. testRemoteDirSSH
+      post-command-display: 
+      post-command: |
+          ls testRemoteDirSSH/mnt
+          sumo -u testRemoteDirSSH
+      comment: |
+          The remote home of another host is mounted on folder 'testRemoteDirSSH'.
+          The folder content of remote 'mnt' folder is listed.
+          At the end, the SSH folder is unmounted. 
+
+  mntsmb:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a Windows share
+    _usage: sumo [OPTIONS] <SAMBA URL | UNC address> [<mount folder>]
+    _usage-info: |
+      where `SAMBA URL` is of the form: smb://[_login_:[_password_]@]_host_/_share_ +
+      where `UNC address` is of the form: //_host_/_share_
+    1:
+      name: Example of mounting of remote Windows share
+      pre-command: |
+          sudo ip route add ${TEST_HOST_1_IP} dev ${TEST_HOST_1_IF} &>/dev/null || echo "Route exists"
+      command-display : |
+          sumo smb://<host>[/<login>[:password]][/<share>]] [target folder]
+          or 
+          sumo //<host>/<share> [target folder]
+      # When a direct connection is used, don't forget to set the route!
+      # Eg: sudo ip route  add 192.168.0.30 dev ${TEST_HOST_1_IF}
+      command : |
+          !sumo -y //${TEST_HOST_1_IP}/michel --user=michel --password=${TEST_HOST_1_PASS} ~/windows/
+      post-command-display:
+      post-command: |
+          ls ~/windows/AppData
+          sleep 1
+          !sumo -u ~/windows
+          sleep 1
+          sudo ip route del ${TEST_HOST_1_IP} dev ${TEST_HOST_1_IF} 2>/dev/null  || echo
+      comment: |
+          The home of the remote Windows host ${TEST_HOST_1_IP} is mounted on folder 'windows'.
+          The folder content of remote 'AppData' is listed.
+          At the end, the Windows share is unmounted. 
+
+  mntftp:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a FTP directory
+    _usage: sumo [OPTIONS] <FTP URL> [<mount folder>] 
+    _usage-info: |
+      where `FTP URL` is of the form: ftp://[_login>@]_host_[:_port_] [target folder]
+
+      If password is not given, the user will be prompted to enter one. If login is not specified in the URL, the current user login is used by default.
+
+      The client-side *FTP mount options* can be tuned by *configuration*. See section <<FTP setup and mount options>>
+
+    1:
+      name: Example of mounting a FTP directory using login and password, no existing .netrc_${FTPADDR}
+      pre-command: |
+          rm -f $HOME/.netrc_${FTPADDR}
+      command-display : |
+          sumo ftp://[<login>@]<host>[:<port>] [target folder]
+      command : |          
+          !sumo -y ftp://${FTPLOGIN}@${FTPADDR} ~/webftp -p ${FTPPASS} 
+      post-command-display:
+      post-command: |
+          sleep 1
+          ls ~/webftp/download
+          sleep 1
+          sumo -u ~/webftp
+      comment: |
+          The FTP site ftp://${FTPLOGIN}@${FTPADDR} is mounted on folder 'webftp'.
+          The 'download' folder content is listed.
+          At the end, the FTP site is unmounted. 
+
+    2:
+      name: Example of remounting a FTP directory using existing .netrc_${FTPADDR} file
+      command-display : |
+          sumo ftp://[<login>@]<host>[:<port>] [target folder]
+      command : |          
+          !sumo -y ftp://${FTPLOGIN}@${FTPADDR} ~/webftp
+      post-command-display:
+      post-command: |
+          sleep 1
+          ls ~/webftp/download
+          sleep 1
+          sumo -u ~/webftp
+      comment: |
+          The FTP site ftp://${FTPLOGIN}@${FTPADDR} is mounted on folder 'webftp'
+          using the credentials stored in .netrc_${FTPADDR} that should have 
+          been generated in previous test.
+          The 'download' folder content is listed.
+          At the end, the FTP site is unmounted. 
+
+  mntdrive:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting Google Drive
+    _usage: sumo [OPTIONS] http://drive.google.com [<mount folder>] 
+    _usage-info: |
+      The default mount options can be tuned by configuration. See section <<Google Drive setup and mount options>>
+      The test
+    1:
+      name: Example of mounting Google Drive
+      command-display : |
+          sumo <HTTP URL> [target folder]
+      command : |          
+          sumo -y https://drive.google.com drive
+      post-command-display:
+      post-command: |      
+          ls drive/
+          sleep 3
+          sync
+          sumo -u drive
+      comment: |
+          The Google Drive is mounted on folder 'drive'.
+          The folder content is listed.
+          At the end, the drive is unmounted.
+          Preconditions:
+          [1] The Google secrets have been pregenerated and put in configuration file ~/.config/Sumo/sumo.yml:
+          ...
+          google client id: 637374942720-uct976icvfcq8emmsfrdujd35j40pd8q.apps.googleusercontent.com
+          google secret id : <<INTENTIONALLY MASKED SECRET ID>>
+          [2] The following must be executed then to verify the credentials, 
+          the user will be asked to verify twice:
+             sumo -y https://drive.google.com drive --refresh-deps
+             sumo -u ./drive # if successfull verification
+
+    _DEPRECATED:
+      name: Example of mount including verification of a new or changed OAuth client ID and secret ID
+      command-display : |
+          sumo <HTTP URL> [target folder] --refresh-deps
+      command : |          
+          sumo -y https://drive.google.com drive --refresh-deps
+      post-command-display:
+      post-command: |      
+          ls drive/
+          sleep 3
+          sync
+          sumo -u drive
+      comment: |
+          The Google Drive is mounted on folder 'drive' and its content is listed.
+          Option `--refresh-deps` requests the OAuth client ID and secret ID to be verified beforehand.
+          At the end, the drive is unmounted. 
+
+  mntimg:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a raw disk image
+    _usage: sumo [OPTIONS] <disk file name>.img [target folder]  
+    1:
+      name: Example of mounting of an existing raw disk image
+      pre-command:
+          cd ~/test_sumo
+      command : |          
+          sumo -y imgdisk.img ./imgdisk
+      post-command-display:
+      post-command: |
+          ls imgdisk/
+          sumo -u ./imgdisk
+          cd ..
+      comment: |
+          The raw disk image is mounted on folder 'imgdisk'.
+          The folder content is listed.
+          At the end, the disk file is unmounted. 
+          precondition: ~/test_sumo/imgdisk.img exists
+
+  mntvm:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a virtual machine disk
+    _usage: sumo [OPTIONS] <disk file name>.(qcow2|vdi) [target folder]  
+    1:
+      name: Example of mounting of an existing virtual machine disk
+      pre-command:
+          cd ~/test_sumo
+      command : |          
+          sumo -y imgdisk.qcow2 ./imgdisk_qcow2
+      post-command-display:
+      post-command: |
+          ls imgdisk_qcow2/
+          sumo -u ./imgdisk_qcow2
+      comment: |
+          The virtual disk image is mounted on folder 'imgdisk_qcow2'.
+          The folder content is listed.
+          At the end, the disk file is unmounted. 
+          precondition: ~/test_sumo/imgdisk.qcow2 exists
+
+  mntvera:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting an existing VERA volume
+    _usage: |
+      sumo [OPTIONS] <disk file name>.vera [target folder]  
+      sumo [OPTIONS] <block device> [target folder]
+    1:
+      name: Example of mounting of a VERA volume which is a file 
+      pre-command:
+          cd ~/test_sumo
+      command : |          
+          sumo -y veradisk.vera ./veravol -p a
+      post-command-display:
+      post-command: |
+          ls veravol/
+          sleep 2 # If dashboard is running in parallel let time to refresh and update recent files
+          sumo -u ./veravol
+          cd ..
+      comment: |
+          The VERA disk file is mounted on folder 'veravol'.
+          The folder content is listed.
+          At the end, the disk file is unmounted. 
+          precondition: ~/test_sumo/veradisk.vera exists
+
+    2:
+      input: 
+        VERA_DEVICE: "Prepare the VERA stick, then enter VERA partition device path (e.g. sdc1 or sdd1)"
+      name: Example of mounting of an existing VERA volume hosted on a device 
+      pre-command:
+          cd ~/test_sumo
+      command : |          
+          sumo -y /dev/${VERA_DEVICE} ./veravol -p a
+      post-command-display:
+      post-command: |
+          ls veravol/
+          sleep 2 # If dashboard is running in parallel let time to refresh and update recent files
+          sumo -u ./veravol
+      comment: |
+          The VERA volume hosted on the device /dev/${VERA_DEVICE} (USB stick) is mounted on folder 'veravol'.
+          The folder content is listed.
+          At the end, the device is unmounted. 
+          precondition: the test stick can be formatted as VERA as follows:
+          - open mountpilot console,
+          - select stick device
+          - type 'f', 
+          - select 'vera', <enter>
+          - partitionless? enter 'NO' , <enter>
+          - then select 'ext4' as file system, <enter>
+          - enter and confirm password 'a', <enter>
+
+  mntluks:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a LUKS volume
+    _usage: |
+      sumo [OPTIONS] <disk file name>.luks [target folder]  
+      sumo [OPTIONS] <block device> [target folder]
+    1:
+      name: Example of mounting of an existing LUKS volume which is a file 
+      pre-command:
+          cd ~/test_sumo
+      command : |          
+          sumo -y luksdisk.luks ./luksdisk -p a
+      post-command-display:
+      post-command: |
+          ls luksdisk/
+          sleep 2 # If dashboard is running in parallel let time to refresh and update recent files
+          sumo -u ./luksdisk
+          cd ..
+      comment: |
+          The LUKS disk file is mounted on folder 'luksdisk'.
+          The folder content is listed.
+          At the end, the disk file is unmounted. 
+          precondition: ~/test_sumo/luksdisk.luks exists
+
+    2:
+      name: Example of mounting of an existing LUKS volume hosted as a partition of a device 
+      input: 
+        LUKS_DEVICE: "Prepare the LUKS stick, the enter LUKS partition device path (e.g. sdc1 or sdd1)"
+      pre-command:
+          cd ~/test_sumo
+      command : |          
+          sumo -y /dev/${LUKS_DEVICE} ./luksdisk -p a
+      post-command-display:
+      post-command: |
+          ls luksdisk/
+          sleep 2 # If dashboard is running in parallel let time to refresh and update recent files
+          sumo -u ./luksdisk
+          cd ..
+      comment: |
+          The LUKS volume hosted on the device /dev/${LUKS_DEVICE}  (USB stick) is mounted 
+          on folder 'luksdisk' and its content is listed. At the end, the device is unmounted. 
+          precondition: the test stick can be formatted as LUKS as follows:
+          - open mountpilot console,
+          - select stick device
+          - type 'f', 
+          - partitionless? enter 'NO' , <enter>
+          - select 'LUKS', 'partitionless' , <enter>
+          - then select 'ext4' as file system, <enter>
+          - enter and confirm password 'a', <enter>
+
+  mntnested:
+    _categories: ["mount-command-line", "automatic"]
+    _title: |
+      Mounting a nested data source
+    _term-height: 50
+    _usage: |
+          sumo [OPTIONS] <data source> [target folder]
+          sumo [OPTIONS] <target folder>/.../<data source2> [target folder 2]
+          ...
+    1:
+      name: Example of mounting a nested data source
+      pre-command:
+      command : |          
+          sumo -y -L WINDOWS11 ~/WINDOWS11
+          sumo -y ~/WINDOWS11/Users/miche/Documents/vault/personnel-confidentiel.vera ~/vault # /dev/sda3
+      post-command-display:
+      post-command: |
+          ls ~/vault/
+          sleep 2 # If dashboard is running in parallel let time to refresh and update recent files
+          sumo -y -f -u ~/WINDOWS11
+          cd ..
+      comment: |
+          There's a VERA volume file located on a Windows partition labeled 'WINDOWS11' (/dev/sda3). 
+          First the Window partition is mounted, then the VERA volume located inside it.
+          At the end, the Windows partition is unmounted. 
+          Because sumo is aware of nested mounts, it will request to confirm
+          the unmounting of the nested VERA volume as well. 
+          The confirmation is entered automatically here using both the `-y` and `-f` options. Note for the sake of safety
+          specifying only `-y` is not enough in this specific case.
+
+  mntlvm:
+    _categories: ["mount-command-line", "automatic"]
+    _term-height: 50
+    _title: |
+      Mounting LVM volumes
+    _usage: |
+          sumo [OPTIONS] <data source> [target folder]
+    1:
+      name: Example of mounting of LVM volumes
+      pre-command:
+      command : |          
+          sumo -y ~/riffian/Data/Machines/backuprepo-amd64.qcow2 ~/vmdisk || echo "Normal failure, as swap cannot be mounted"
+      post-command-display:
+      post-command: |
+          ls ~/vmdisk/
+          sleep 2 # If dashboard is running in parallel let time to refresh and update recent files
+          sumo -a -u ~/riffian/Data/Machines/backuprepo-amd64.qcow2
+      comment: |
+          The data source is here a full Debian9 VM disk that has been partitionned with LVM.
+          The disk contains several LVM volumes which are mounted all together. 
+          Note that device nbd0p2 cannot be mounted because it is a swap partition.
+          Once mounted, its content is listed.
+          At the end, the whole disk and all LVM volumes are unmounted all at once.
+          Regarding the unmount, please check also section <<Unmounting LVM volumes>>.
+
+  umntfolder:
+    _categories: ["unmount-command-line", "automatic"]
+    _title: |
+        Unmounting using the mountpoint folder 
+    _usage: |
+        sumo -u <mountpoint folder path>      
+    1:
+        name: Example of unmounting using the mountpoint folder 
+        pre-command-display: 
+        pre-command: |
+            sumo -y -L photos ~/photosDir
+            sleep 1
+        command-display:
+        command : |
+            sumo -u ~/photosDir 
+        post-command-display: 
+        post-command: 
+        comment: 
+            
+  umntlbl:
+    _categories: ["unmount-command-line", "automatic"]
+    _title: |
+        Unmounting using the device label 
+    _usage: |
+        sumo -u -L <label>      
+    1:
+        name: Example of unmounting using the device label 
+        pre-command-display: 
+        pre-command: |
+            sumo -y -L photos ~/photosDir
+            sleep 1
+        command-display:
+        command : |
+            sumo -u -L photos 
+        post-command-display: 
+        post-command: 
+        comment: 
+
+  umnt_src:
+    _categories: ["unmount-command-line", "automatic"]
+    _title: |
+      Unmounting using the data source location      
+    _usage: |
+        sumo -u <block device>
+        sumo -u <overlay path>         
+        sumo -u adb://usb
+        sumo -u [nfs://]<host>:<dirpath>
+        sumo -u ftp://[<login>@]<host>[:<port>]
+        sumo -u [ssh://]<login>@<host>:[<port>]/<path>
+        sumo -u <login>@<host>[:<path>]
+        sumo -u smb://<host>[/<login>[:password]][/<share>]]
+        sumo -u //<host>/<share>
+        sumo -u <HTTP URL>
+        sumo -u <disk file name>
+    1:
+      name: Example of unmounting using the NFS URL
+      command-display :
+      pre-command: |
+          sumo -s -y riffian:/home/michel/Data/Scan ~/mnt/scanDir 
+          ls ~/mnt/scanDir 
+          sleep 1 
+      command : |          
+          sumo -s -u riffian:/home/michel/Data/Scan
+      post-command-display:
+      post-command: |
+          test -d ~/mnt/scanDir || echo "OK, checked that mount folder was removed"
+      comment: 
+    2:
+      name: Example of unmounting using the SSH URL
+      command-display : 
+      pre-command: |
+          sumo -s -y ${SSHLOGIN}@${SSHHOST}:Data/Scan ~/mnt/scanDir 
+          ls ~/mnt/scanDir 
+          sleep 1 
+      command : |          
+          sumo -s -u ${SSHLOGIN}@${SSHHOST}:Data/Scan 
+      post-command-display:
+      post-command: |
+          test -d ~/mnt/scanDir || echo "OK, checked that mount folder was removed"
+      comment: |
+    3:
+      name: Example of unmounting using the UNC address
+      command-display :
+      pre-command: |
+          sudo ip route add ${TEST_HOST_1_IP} dev ${TEST_HOST_1_IF} 2>/dev/null || echo 
+          !sumo -s -y //${TEST_HOST_1_IP}/michel --user=michel --password=${TEST_HOST_1_PASS} ~/mnt/windows/
+          ls ~/mnt/windows/AppData
+          sleep 1 
+      command : |    
+          !sumo -s -u //${TEST_HOST_1_IP}/michel  
+      post-command-display:
+      post-command: |
+          test -d ~/mnt/windows || echo "OK, checked that mount folder was removed"
+          sudo ip route del ${TEST_HOST_1_IP} dev ${TEST_HOST_1_IF} 2>/dev/null  || echo
+      comment: |
+    4:
+      name: Example of unmounting using the FTP URL
+      command-display :
+      pre-command: |
+          rm -f $HOME/.netrc_${FTPADDR}
+          !sumo -s -y ftp://${FTPLOGIN}@${FTPADDR} ~/mnt/webftp -p ${FTPPASS}
+          ls ~/mnt/webftp/download
+          sleep 1 
+      command : |    
+          !sumo -s -u ftp://${FTPLOGIN}@${FTPADDR} 
+      post-command-display:
+      post-command: |
+          test -d ~/mnt/webftp || echo "OK, checked that mount folder was removed"
+      comment: |
+    5:
+      name: Example of unmounting using the Google Drive URL
+      command-display :
+      pre-command: |
+          sumo -s -y https://drive.google.com ~/mnt/drive
+          ls ~/mnt/drive/
+          sleep 1 
+      command : |    
+          sumo -s -u https://drive.google.com 
+      post-command-display:
+      post-command: |
+          test -d ~/mnt/drive || echo "OK, checked that mount folder was removed"
+      comment: |
+    6:
+      name: Example of unmounting using VERA volume file
+      command-display :
+      pre-command: |
+          cd ~/test_sumo
+          sumo -s -y veradisk.vera ./veravol -p a
+          ls ./veravol/
+          sleep 1 
+      command : |    
+          sumo -s -u veradisk.vera 
+      post-command-display:
+      post-command: |
+          test -d ./veravol || echo "OK, checked that mount folder was removed"
+          cd ..
+      comment: |
+    7:
+      name: Example of unmounting using LUKS volume file
+      command-display : 
+      pre-command: |
+          cd ~/test_sumo
+          sumo -s -y luksdisk.luks luksdisk -p a
+          ls luksdisk/
+          sleep 1 
+      command : |    
+          sumo -s -u luksdisk.luks
+      post-command-display:
+      post-command: |
+          test -d luksdisk || echo "OK, checked that mount folder was removed"
+          cd ..
+      comment: |
+    8:
+      name: Example of unmounting using a virtual machine disk file
+      command-display : 
+      pre-command: |
+          cd ~/test_sumo
+          sumo -s -y imgdisk.qcow2 ./imgdisk_qcow2
+          ls imgdisk_qcow2/
+          sleep 1 
+      command : |    
+          sumo -s -u imgdisk.qcow2 
+      post-command-display:
+      post-command: |
+          test -d ./imgdisk_qcow2 || echo "OK, checked that mount folder was removed"
+          cd ..
+      comment: |
+  
+  umntlazy:
+    _categories: ["unmount-command-line", "manual"]
+    _term-height: 50
+    _title: |
+      Lazy unmounting
+    1:
+      name: Example of lazy unmounting
+      pre-command-display: 
+      pre-command: |
+        rm ~/.local/sumo/log.txt
+        sumo -y ${SSHLOGIN}@${SSHHOST}:. ~/mnt/testRemoteDirSSH
+        sleep 2
+        sumo -y -L photos ~/mnt/photosDir
+        sleep 1
+      command-display : |
+          sumo -u --lazy <data source>
+          sumo -u --lazy <mountpoint>
+      command : |
+        sumo --lazy -u ~/mnt/testRemoteDirSSH
+        sumo --lazy -u -L photos 
+      post-command-display: 
+      post-command: |
+        sync & sleep 1
+        cat ~/.local/sumo/log.txt | grep 'UMOUNT COMMAND:'
+      comment: |
+          A local USB stick and remote SSH folder are mounted.
+          Both sources are unmounted lazy. The logs are inspected to check manually that the native lazy options have been passed on.
+
+  mntblk_i:
+    _categories: ["mount-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Mounting a block device in interactive console
+    1:
+      name: Example of mounting of a block device
+      live-recording: yes
+      pre-command: |
+        rm ~/.config/Sumo/recentlist.yml
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot --ghost'"
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol"  --wait --command="bash -c 'read -n1 -p \"Insert now the stick and strike a key to remount using sumo\" && sumo -u /dev/sde1 && sleep 2 && sumo -o ro -s -y /dev/sde1 && cat ~/.local/sumo/log.txt && read -n1 -p \"Check the log, then typing b on the console to browse. Once done, type any key to unmount\" && sumo -u /dev/sde1 && read -n1 -p \"Check the device is unmounted. Type any key to exit this term. Type 'q' to quit the interactive console\" && exit 0'"
+      comment: |
+          An USB stick, which contains a Debian installation ISO image is first live plugged in.
+          The stick is then remounted by sumo command read-only on the default folder by command line.
+          On the console, the mounted device disappears and reappears. 
+           ~/.local/sumo/log.txt is inspected, which indicates the device was actually mounted write-protected.
+          After that the content of the stick is checked by browsing the mounted folder.          
+          At the end, the device is unmounted.         
+
+  mntpart_i:
+    _categories: ["mount-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Mounting a partition
+    1:
+      name: Example of mounting of a partition
+      live-recording: yes
+      pre-command: |
+        rm ~/.config/Sumo/recentlist.yml
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        sumo -u /dev/sda3
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot --ghost'"
+
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol"  --wait --command="bash -c 'sleep 4 && sumo -s -y /dev/sda3 && cat ~/.local/sumo/log.txt && read -n1 -p \"Check the log, then typing b on the console to browse. Once done, type any key to unmount\" && sumo -u /dev/sda3 && read -n1 -p \"Check the device is unmounted. Type any key to exit this term. Type 'q' to quit the interactive console\" && exit 0'"
+      comment: |
+          A Windows data partition, which is mapped to device `/dev/sda3` on a dual boot system,
+          is mounted on the proposed default folder.
+          After that, the content of the Data partition is checked by browsing the mounted folder.          
+          At the end, the partition is unmounted.
+
+  mntro_i:
+    _categories: ["mount-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Mounting a data source read-only
+    1:
+      name: Example of remounting an SSH read-only
+      live-recording: yes
+      pre-command: |
+        rm ~/.config/Sumo/recentlist.yml
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot --ghost'"
+
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol"  --wait --command="bash -c 'sleep 4 && sumo -s -y michel@riffian ./testsshro && read -n1 -p \"Now, remount read-only the ssh mounting on testsshro via the console. Then type b to check content is ro. Any key continue\" &&  read -n1 -p \"Unmount and remount from history and browse to check still read-only. Any key continue\" && read -n1 -p \"Remount r/w and check if writable. Any key to unmount and end \" && sumo -u ./testsshro && exit 0'"
+
+      comment: |
+          A SSH mount is set up, initially in read-write. The content is checked for being writeable with the browser.
+          The SSH source is remounted read-only via the interactive console. The content is checked for being read-only with the browser.
+          The SSH source is unmounted and mounted again from history to check that it remained read-only after remount.
+          The SSH source is remounted from read-only back to read-write. The content is checked for being writeable with the browser.
+          At the end, SSH connection is unmounted.
+
+  mntremount_automountparent_i:
+    _categories: ["mount-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Auto-mount of parent data source when remounting from history
+    1:
+      name: Example of remounting from history involving a parent data source to be remounted 
+      live-recording: yes
+      pre-command: |
+        rm ~/.config/Sumo/recentlist.yml
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 0+0 --title="mountpilot"  --wait --command="bash -c 'mountpilot --ghost'"
+      comment: |
+          A personal vault implemented as a LUKS disk file is located on a Windows partition which is not mounted. 
+          When attempting to remount the disk file from history, it is proposed to remount automatically 
+          the Windows partition containing the disk file.
+          At the end, the Windows partition is unmounted, which automatically triggers the unmounting of the contained
+          disk file as well.
+
+  mntfwd_i:
+    _categories: ["mount-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Mount forwarding with the interactive console
+    1:
+      name: Example of mount forwarding with the interactive console
+      live-recording: yes
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 0+0 --title="mountpilot"  --wait --command="bash -c 'mountpilot -y -H blank --ghost'"
+      comment: |
+          This example involves a USB stick containing a single partition and shows how the partition can be mounted 
+          and unmounted by applying the mount order to the parent system device standing for the device itself.
+          The mount operation is repeated directly on the partition itself to show that the result is all the same.
+
+  histlist:
+    _ignore-comment-for-manpage: yes    
+    _title: |
+      Listing available mount histories
+    1:
+      _usage: sumo -H
+      name: Listing available mount histories
+      pre-command-display: 
+      pre-command: 
+      command : |
+          sumo -H
+      post-command-display: 
+      post-command: 
+      comment: |
+         This example shows that the available mount histories. For example, there's the 
+         __demo__ one. The content of the __demo__ history is saved in the file named 
+         __recent.yml.<history name>__ located in `~/.config/Sumo` folder. 
+
+  sync_hist:
+    _categories: ["history", "manual"]
+    _ignore-for-manpage: yes    
+    _title: |
+      History synchronization between console and command lines
+    1:
+      name: Example of LVM disk unmounted from terminal and updated live in the history
+      live-recording: yes
+      pre-command: |
+        rm ~/.config/Sumo/recentlist.yml
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot --ghost'"
+
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol"  --wait --command="bash -c 'sleep 4 && sumo -s -y ~/riffian/Data/Machines/backuprepo-amd64.qcow2 ; read -n1 -p \"Check that the LVM qcow2 is mounted. Any key to continue and unmount\" && sumo -a -u ~/riffian/Data/Machines/backuprepo-amd64.qcow2 ; read -n1 -p \"Check the disk is unmounted and there is a new entry in the history for unmounted disk. Any key to end.\" && exit 0'"
+
+      comment: |
+        The interactive is running on one terminal. A LVM system residing in a qcow2 file is mounted 
+        from another terminal. The new mounted disk appears live on the console. Then, the disk file
+        is unmounted from the terminal. A new entry for the disk file appears live in the history of 
+        the console.
+
+  switchhist:
+    _categories: ["history", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Switching to another mount history
+    1:
+      name: Switching to another mount history
+      live-recording: yes
+      pre-command: |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 150x35+0+0 --title="mountpilot" --wait --command="bash -c 'echo \"STARTING WITH BLANK HISTORY. MOUNT AND UNMOUNT WINDOWS PART AND QUIT.\" && mp -H blank && echo \"STARTING WITH HISTORY DEMO2, SAVING CURRENT TO WIN. REMOVE 3 LAST HISTORY ITEMS.\" && mp -H demo2:win && echo \"STARTING WITH HISTORY WIN, NO SAVING\" && mp -H win && echo \"STARTING WITH HISTORY DEMO2, NO SAVING? CHECK THAT REMOVED HISTORY ITEMS ARE STILL THERE\" && mp -H demo2'"
+
+      comment: |
+        MountPilot is started with a previoulsy saved 'blank' history.
+        The Windows partition is mounted and then unmounted to create a new entry in history.
+        It is restarted with history demo2 and saving the current history to win.
+        Remove the 3 last history items. It is restarted with history win without saving the current history.
+        Once started, it can be observed that the previous Windows mount is indeed in the saved history.
+        It is restarted again with the demo2 history (without saving). It can be observed that the full
+        demo2 history is there, because this history was not saved before after erasing history items.
+
+  ghosthist:
+    _categories: ["history", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Mount ghost mode
+    1:
+      name: Ghost mode
+      live-recording: yes
+      command : |
+        gnome-terminal --geometry 150x35+0+0 --title="mountpilot" --wait --command="bash -c 'echo \"STARTING WITH DEMO2 HISTORY IN GHOST MODE. REMOVE 3 FIRST HISTORY ITEMS AND QUIT\" && mp --ghost -H demo2 && echo \"STARTING IN NORMAL MODE WITH LAST HISTORY. CHECK NO CHANGE, DEMO2 FULL HISTORY IS THERE. THEN, REMOVE AGAIN 3 FIRST HISTORY ITEMS AND QUIT\" && mp && echo \"STARTING WITH IN NORMAL MODE. CHECK HISTORY IS EMPTY\" && mp'"
+
+      comment: |
+        MountPilot is started in ghost mode with demo2 history. All items are removed.
+        It is restarted without ghost mode. It can be checked that the previous history was untouched.
+        Now removing again all history item. After restart, it can be checked that the history is empty,
+        because the ghost mode was not used in the second start.
+
+  label_i:
+    _categories: ["disk-op-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Label a filesystem
+    1:
+      name: Example of labelling a filesystem with the interactive console
+      live-recording: yes
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 0+0 --title="mountpilot"  --wait --command="bash -c 'mountpilot --ghost'"
+      comment: |
+          There is an USB stick present and labelled 'photos'. 
+          The label is changed to 'shots2025'' and refresh by type U. 
+          Restore the initial label
+
+  partdisk_i:
+    _categories: ["disk-op-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Creating a disk partition with the interactive console
+    1:
+      name: Example of creating a disk partition with the interactive console
+      live-recording: yes
+      pre-command: |
+        rm ~/.config/Sumo/recentlist.yml
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 0+0 --title="mountpilot"  --wait --command="bash -c 'mountpilot --ghost'"
+      comment: |
+          This example creates a Microsoft Basic data partition on a blank USB stick. Press 'P' on the disk device.
+          Once the partition has been checked created, the stick is wiped off of any disk information
+          to make it blank again (using key 'f'ormat).  
+          precondition: plugin the big 8Go stick
+
+  formatdisk_i:
+    _categories: ["disk-op-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Formatting a disk with the interactive console
+    1:
+      name: Example of formatting a exfat disk with the interactive console
+      live-recording: yes
+      pre-command: |
+        rm ~/.config/Sumo/recentlist.yml
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 0+0 --title="mountpilot"  --wait --command="bash -c 'mountpilot -y -H blank --ghost'"
+      comment: |
+          This example formats a blank USB key with an exfat partition. 
+          The partition is mounted and browser is opened on mounted folder, which 
+          should be empty. At the end, it is unmounted.
+          precondition: plugin the big 8Go stick
+
+  flashdisk_i:
+    _categories: ["disk-op-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Flashing a disk with the interactive console
+    1:
+      name: Example of flashing a mini Debian image with the interactive console
+      live-recording: yes
+      pre-command: |
+        rm ~/.config/Sumo/recentlist.yml
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 0+0 --title="mountpilot"  --wait --command="bash -c 'mountpilot -y -H blank --ghost'"
+      comment: |
+          The image debian_20070703T000000Z_mini.iso is flashed on stick via the console, typing 'F'.
+          Default location folder of image is given in sumo's local config.
+          Once flashed, the image is mounted and browsed typing 'b'.
+          At the end, the stick is unmounted and content wiped off.
+          Note: This example performs the same task as the one given for the command line example, but using
+          the console menus and functionality. 
+          precondition: plugin the big 8Go stick
+
+  createencrypteddisk_i:
+    _categories: ["create-disk-file-console", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Creating an encrypted device with the interactive console
+    1:
+      name: Example of creating a VERA-encrypted device with the interactive console
+      live-recording: yes
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 0+0 --title="mountpilot"  --wait --command="bash -c 'mountpilot -y -H blank --ghost'"
+      comment: |
+          This example creates a VERA volume hosted directly by the device, with password 'vera'.
+          The VERA volume is created for containing a NTFS file system. 
+          The volume is mounted to check if the password works.
+          Its root folder opened with a file explorer to check the available space.
+          At the end, the VERA volume is unmounted. Stick content is wiped off.
+          precondition: plugin the stick dedicated for encrypted systems. 
+
+    2:
+      name: Example of creating a LUKS-encrypted device with the interactive console
+      live-recording: yes
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 0+0 --title="mountpilot"  --wait --command="bash -c 'mountpilot -y -H blank --ghost'"
+      comment: |
+          This example creates a LUKS volume hosted directly by the device, with password 'luks'.
+          The LUKS volume is created for containing a NTFS file system. 
+          The volume is mounted to check if the password works.
+          Its root folder opened with a file explorer to check the available space.
+          At the end, the LUKS volume is unmounted. 
+
+  autossh_i: 
+    _categories: ["autosetup", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      SSH auto-login setup
+    1:
+      name: Example of SSH auto-login setup carried out at first mount
+      live-recording: yes
+      #manual: yes
+      command : |
+        #sudo ip addr add ${TEST_HOST_1_IF_IP}/24 dev ${TEST_HOST_1_IF} || echo "${TEST_HOST_1_IF_IP} exists"
+        #sudo ip route del 192.168.0.0/24 dev ${TEST_HOST_1_IF} || echo "192.168.0.0 already cleaned"
+        #sudo ip route add ${TEST_HOST_1_IP}/24 dev ${TEST_HOST_1_IF} &>/dev/null || echo "Route exists"
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot --ghost -y -H blank'"
+
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol"  --wait --command="bash -c 'sleep 2 && sumo -s -y michel@${TEST_HOST_1_IP} && read -n1 -p \"Following the auto-SSH setup, then via interactive console, mount and unmount to check no pass is required anymore. Type 'q' to quit\" && exit 0'"
+
+      post-command: |
+        sudo ip addr del ${TEST_HOST_1_IF_IP}/24 dev ${TEST_HOST_1_IF}
+      comment: |
+          An attempt to mount via SSH is carried out on host ${TEST_HOST_1_IP} using login michel. 
+          It is detected whether an auto-login is already out there. When not, the setup of the auto-login is followed. After the setup is done
+          the remote folder is listed, the remote host is unmounted and remounted to check that the auto-login is in effect
+          and no password is requested anymore.
+          NOTE:
+          Assign a local IP to the interface used to communicate with test host
+            sudo ip addr add 192.168.0.31/24 dev enx000fc9119ecb
+          On test machine, recreate user 'michel'
+            sudo userdel -f michel
+            sudo useradd michel -m 
+            sudo passwd michel
+            sudo ip addr add ${TEST_HOST_1_IP}/24 dev enp0s25 # Put the correct interface name
+
+  autoftp_i: 
+    _categories: ["autosetup", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Automatic FTP auto-login
+    1:
+      name: Example of automatic ftp auto-login setup carried out at first mount
+      live-recording: yes
+      #manual: yes
+      pre-command: |
+        rm -f ~/.netrc_ftp.slashetc.fr || echo ".netrc_ftp.slashetc.fr cleanup ok"
+        rm -f ~/.netrc_riffian  || echo ".netrc_riffian cleanup ok"
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+      command : |
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot -y -H blank --ghost'"
+
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol"  --wait --command="bash -c 'sleep 3 && sumo -s -y ftp://${FTPLOGIN}@${FTPADDR} ~/webftp && read -n1 -p \"Now check content of mounted ftp folder. When ok, unmount it and press a key\" && sumo -s -y ftp://eng@192.168.0.12 ~/eng -p eng && read -n1 -p \"Now check content of mounted ftp folder. When ok, unmount it and press a key\" && sumo -s -y ftp://${FTPLOGIN}@${FTPADDR} ~/webftp && sumo -s -y ftp://eng@192.168.0.12 && read -n1 -p \"Now check that both ftp sites could be mounted with console without password. When ok, unmount them and press a key to finish\" && exit 0'"
+
+      comment: |
+          An attempt to mount a distant ftp site is carried out by command. The first time, the tester is requested to enter password.
+          Upon successful login, the root folder is browsed and the ftp site is unmounted. The same process is repeated with
+          another ftp site. At the end, we repeat the same process again for both sites. In both cases, it was not 
+          necessary to re-enter the password.
+
+  autonfsserverinstall_i: 
+    _categories: ["autosetup", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      NFS server installation
+    1:
+      name: Example of automatic server installation when no NFS server is detected upon NFS URL mounting
+      live-recording: yes
+      #manual: yes
+      pre-command: |
+        # remove the point-to-point connection
+        sudo ip route del ${TEST_HOST_1_IP} dev ${TEST_HOST_1_IF} 2>/dev/null  || echo
+
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot -y -H blank --ghost'"
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol" --wait --command="bash -c 'sleep 3 && sumo -s -y 192.168.0.30:/home/michel && read -n1 -p \"Now check that the NFS mount appears in the console. Browse its content. Unmount and remount to check no password is requested. When ok, unmount them and press a key to finish\" && exit 0'"
+
+      comment: |
+          In this example, we go through the entire NFS setup process. We attempt to mount a NFS share on a remote 
+          host where there is no NFS server. We let the installation proceed, then we agree to proceed with NFS export setup.
+          Finally, the mounting is done and the content of the mounted folder is listed.
+          The permission may be lacking for it, since the ID of user michel may not be the same.
+          The folder is unmounted and remounted to check that the mounting runs smoothly with any new password entry.
+          precondition:
+            The test host must be connected on the same LAN, and not point-to-point anymore.
+            The internet connetion shall also be established:
+              put "nameserver 8.8.8.8" in /etc/resolv.conf
+              sudo ip route add default via 192.168.0.254 dev enp0s25
+              sudo ip addr add 192.168.0.30/24 dev enp0s25 # if done yet
+
+            The SSH must have been installed via previous test 'autossh_i'
+
+            ensure NFS packages are uninstalled 
+                sudo apt remove nfs-*
+
+            This did not help get the permissions:
+            remote 'michel' account must be in sudoers' group: sudo usermod michel -G sudo
+            sudo groupadd -g 2001 G2001
+
+  autoftpserverinstall_i: 
+    _categories: ["autosetup", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      FTP server installation
+    1:
+      name: Example of auto FTP server install when none is detected upon FTP mounting
+      live-recording: yes
+      #manual: yes
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot -y -H blank --ghost'"
+
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol" --wait --command="bash -c 'sleep 3 && sumo -s -y ftp://michel@192.168.0.30 && read -n1 -p \"Now check that the FTP mount appears in the console. Browse its content. Unmount and remount to check no password is requested. When ok, unmount them and press a key to finish\" && exit 0'"
+
+      comment: |
+          In this example, we go through the entire FTP setup process. We attempt to mount a FTP site on a remote 
+          host where there is no FTP server. We select 'vsftpd' for installation, then we agree to proceed with FTP password setup.
+          Finally, the mounting is done and the content of the mounted folder is listed.
+          The folder is unmounted and remounted to check that the mounting runs smoothly with any new password entry.
+          precondition:
+            The SSH must have been installed via previous test 'autossh_i'
+
+            ensure vsftp* packages are uninstalled 
+                sudo apt remove vsftp*
+
+  autonfsexport_i: 
+    _categories: ["autosetup", "manual"]
+    _ignore-for-manpage: yes
+    _title: |
+      Auto NFS exports setup
+    1:
+      name: Example of automatic NFS exports setup upon NFS URL mounting
+      live-recording: yes
+      #manual: yes
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot -y -H blank --ghost'"
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol" --wait --command="bash -c 'sleep 3 && sumo -s 192.168.0.30:/home/michel && read -n1 -p \"Now check that the NFS mount appears in the console. Browse its content. Unmount and remount to check no password is requested. When ok, unmount them and press a key to finish\" && exit 0'"
+      comment: |
+          An attempt to mount a NFS share on a remote test host where the exports do not allow the mounting yet
+          The NFS export setup is agreed and the NFS mounting eventually is successful.
+          precondition:
+          nfs server was installed in test 'autonfsserverinstall_i'. For the sake of this test,
+          the /etc/exports file may just have to be removed:
+            sudo su -
+              echo > /etc/exports
+              exit 
+            sudo systemctl restart nfs-kernel-server
+
+  umntlazy_i:
+    _categories: ["unmount-console", "automatic"]
+    _ignore-for-manpage: yes
+    _title: |
+      Lazy unmounting on broken mount
+    1:
+      name: Example of lazy unmounting on broken mount
+      live-recording: yes
+      command : |
+        echo > ~/.local/sumo/log.txt # Reset log for the test
+        gnome-terminal --geometry 30x30+600+0 --title="mountpilot" --command="bash -c 'mountpilot -y -H blank --ghost'"
+        gnome-terminal --geometry 60x35+0+0 --title="testcontrol" --wait --command="bash -c 'sleep 3 && sumo -s 192.168.0.30:/home/michel && read -n1 -p \"Now unplug the ethernet cable and press 'u' to update the console. The broken NFS link should appear in red. Perform a lazy umount. If ok, press a key to finish\" && exit 0'"
+
+      comment: |
+          In the continuation of the previous test, the remote test host is mounted over NFS. 
+          The ethernet cable is unplugged. The broken link appears in red and can be released
+          through a lazy unmount. After the end of the test, plugin the cable again.
+
+  formatdisk:
+    _categories: ["disk-op-command-line", "automatic"]
+    _term-height: 55
+    _title: |
+      Formatting a disk
+    _usage:  |
+          sumo -F -t <filesystem type> <block device path>
+          sumo --format-disk -t <filesystem type> <block device path>
+    1:
+      name: Example of creating on disk a file system (ext4) located on a single partition
+      pre-command: |
+          cd ~/test_sumo
+      command-display : 
+      command : |          
+          sumo -F -t ext4 /dev/${DISK_FORMAT_PART_FLASH_TEST} <<< 'n'
+      post-command-display:
+      post-command: |
+          sumo -y /dev/${DISKPART_FORMAT_PART_FLASH_TEST} ./formatteddisk
+          test -d formatteddisk && echo "Executing 'ls' on disk" && ls formatteddisk  
+          sleep 2
+          sumo -u formatteddisk
+      comment: |
+          When prompted, 'n' (no) is automatically entered to disable a partitionless formatting.
+          The result is a single partition containing an ext4 file system.
+
+    2:
+      name: Example of creating an exfat disk without partition 
+      pre-command: |
+          cd ~/test_sumo
+      command-display : 
+      command : |          
+          sumo -y -F -t exfat /dev/${DISK_FORMAT_PART_FLASH_TEST}
+      post-command-display:
+      post-command: |
+          sumo -y /dev/${DISK_FORMAT_PART_FLASH_TEST} ./myexfat
+          [ -d myexfat ] && touch myexfat/testfile.txt 
+          test -d myexfat && echo "Executing 'ls' on disk" && ls myexfat  
+          sleep 2
+          sumo -u myexfat
+      comment: |
+          When prompted, 'y' (yes) is entered to enable partitionless formatting.
+          The result is an exfat disk without partition. 
+          A test file is written and its presence checked with 'ls'.
+          Note that for mounting, the disk device path has to be used directly.
+          precondition: plugin the big 8 Go stick
+
+  partdisk:
+    _categories: ["disk-op-command-line", "automatic"]
+    _title: |
+      Creating a disk partition
+    _usage:  |
+          sumo --part-disk=<partition GUID> <block device path>
+          sumo -P <partition GUID> <block device path>
+    1:
+      name: Example of creating a single partition of type Microsoft Basic data partition
+      pre-command: |
+          cd ~/test_sumo
+      command-display :
+      command : |          
+          sumo -y -P EBD0A0A2-B9E5-4433-87C0-68B6B72699C7 /dev/${DISK_FORMAT_PART_FLASH_TEST}
+      post-command-display:
+      post-command: |
+          sync && sleep 2
+          test "$(lsblk -n -o parttype /dev/${DISKPART_FORMAT_PART_FLASH_TEST})" = "ebd0a0a2-b9e5-4433-87c0-68b6b72699c7" && echo "OK, /dev/${DISKPART_FORMAT_PART_FLASH_TEST} part is 'Microsoft Basic data'" || echo "NOT OK,  /dev/${DISKPART_FORMAT_PART_FLASH_TEST} part UUID is ${partdisk_parttype}"
+      comment:
+
+  flashdisk:
+    _categories: ["disk-op-command-line", "automatic"]
+    _term-height: 40
+    _title: |
+      Flashing a disk
+    _usage: |
+          sumo --flash-disk=<disk image> <block device path>
+          sumo -B <disk image> <block device path>
+    1:
+      name: Example of flashing a Linux installation image
+      pre-command: |
+          cd ~/test_sumo
+      command-display : 
+      command : |          
+          sumo -y -B ~/riffian/Data/Softlib/images\ iso/mini.iso /dev/${DISK_FORMAT_PART_FLASH_TEST}
+      post-command-display:
+      post-command: |
+          sleep 2
+          sumo -y -L CDROM
+          test -d CDROM && echo "Executing 'ls' on disk" && ls CDROM  
+          sleep 2
+          sumo -u -L CDROM
+      comment: |
+          This example flashes a mini installation image of Debian labeled 'CDROM'. 
+          Flashing the image results in the creation of an ISO9660 file system which content can be mounted.
+
+  createimg:
+    _categories: ["create-disk-file"]
+    _term-height: 50
+    _ignore-comment-for-manpage: yes
+    _title: |
+      Creating a raw disk image file
+    _usage: sumo [OPTIONS] <disk file name>.img [target folder]
+    1:
+      _categories: ["automatic"]
+      name: Example of creating a raw disk image file with a 1Mo ext2, no prompting
+      pre-command: |
+          cd ~/test_sumo
+          mkdir newdiskfiles 2>/dev/null || echo "Folder newdiskfiles already exists." 
+          cd newdiskfiles
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.img 
+      command : |        
+          sumo -y rawdisk.img -o size=1M -t ext2
+      post-command-display:
+      post-command: |
+          sleep 1
+          [ -d rawdisk ] && touch rawdisk/testfile.txt 
+          test -d rawdisk && echo "Executing 'ls'" && ls rawdisk
+          sleep 1
+          sumo -u rawdisk.img
+          sleep 1
+          rm rawdisk.img
+          cd ../..
+      comment: |
+          A raw disk image is created hosting an 'ext2' file system. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+    2:
+      _categories: ["manual"]
+      name: Example of creating a raw disk image file with default ext4 and entered size 900K
+      pre-command: |
+          cd ~/test_sumo
+          mkdir newdiskfiles 2>/dev/null || echo "Folder newdiskfiles already exists." 
+          cd newdiskfiles
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.img 
+      command : |        
+          sumo -y rawdisk.img
+      post-command-display:
+      post-command: |
+          sleep 1
+          [ -d rawdisk ] && touch rawdisk/testfile.txt 
+          test -d rawdisk && echo "Executing 'ls'" && ls rawdisk
+          sleep 1
+          sumo -u rawdisk.img
+          sleep 1
+          rm rawdisk.img
+          cd ../..
+      comment: |
+          A raw disk image is created hosting a default 'ext4' file system.
+          The size 900K is entered manually. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+  createvera:
+    _categories: ["create-disk-file"]
+    _term-height: 50
+    _ignore-comment-for-manpage: yes
+    _title: |
+      Creating a VERA volume file
+    _usage: |
+      sumo [OPTIONS] <disk file name>.vera [target folder]  
+    1:
+      _categories: ["automatic"]
+      name: Example of creating a VERA volume file with a 2Mo exfat, no prompting
+      pre-command: |
+          cd ~/test_sumo
+          mkdir newdiskfiles 2>/dev/null || echo "Folder newdiskfiles already exists." 
+          cd newdiskfiles
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.vera 
+      command : |        
+          sumo -y veravolume.vera -o size=2M -t exfat -p mypassword
+      post-command-display:
+      post-command: |
+          sleep 1
+          [ -d veravolume ] && touch veravolume/testfile.txt 
+          test -d veravolume && echo "Executing 'ls'" && ls veravolume
+          sleep 1
+          sumo -u veravolume.vera
+          sleep 1
+          rm veravolume.vera
+          cd ../..
+      comment: |
+          A VERA volume file is created hosting an 'exfat' file system. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+    2:
+      _categories: ["manual"]
+      name: Example of creating a VERA volume file with a exfat and entered size 3M and password
+      pre-command: |
+          cd ~/test_sumo
+          mkdir newdiskfiles 2>/dev/null || echo "Folder newdiskfiles already exists." 
+          cd newdiskfiles
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.vera 
+      command : |        
+          sumo -y veravolume.vera -t exfat 
+      post-command-display:
+      post-command: |
+          sleep 1
+          [ -d veravolume ] && touch veravolume/testfile.txt 
+          test -d veravolume && echo "Executing 'ls'" && ls veravolume
+          sleep 1
+          sumo -u veravolume.vera
+          sleep 1
+          rm veravolume.vera
+          cd ../..
+      comment: |
+          A VERA volume file is created hosting an 'exfat' file system. 
+          The size (3M) and password are entered manually. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+  createluks:
+    _categories: ["create-disk-file"]
+    _term-height: 50
+    _ignore-comment-for-manpage: yes
+    _title: |
+      Creating a LUKS volume file
+    _usage: |
+      sumo [OPTIONS] <disk file name>.luks [target folder]  
+    1:
+      _categories: ["automatic"]
+      name: Example of creating a LUKS volume file with a 30Mo exfat, no prompting
+      pre-command: |
+          cd ~/test_sumo
+          mkdir newdiskfiles 2>/dev/null || echo "Folder newdiskfiles already exists." 
+          cd newdiskfiles
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.luks 
+      command : |        
+          sumo -y luksvolume.luks -o size=30M -t exfat -p mypassword
+      post-command-display:
+      post-command: |
+          sleep 1
+          [ -d luksvolume ] && touch luksvolume/testfile.txt 
+          test -d luksvolume && echo "Executing 'ls'" && ls luksvolume
+          sleep 1
+          sumo -u luksvolume.luks 
+          sleep 1 
+          rm luksvolume.luks
+          cd ../..
+      comment: |
+          A LUKS volume file is created hosting an 'exfat' file system. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+    2:
+      #ignore: yes
+      _term-height: 60
+      _categories: ["manual"]
+      name: Example of creating a LUKS volume file with a exfat and entered size 30M and password
+      pre-command: |
+          cd ~/test_sumo && (mkdir newdiskfiles 2>/dev/null || echo "Folder newdiskfiles already exists.")
+          cd newdiskfiles
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.luks 
+      command : |        
+          sumo -y luksvolume.luks -t exfat 
+      post-command-display:
+      post-command: |
+          sleep 1
+          [ -d luksvolume ] && touch luksvolume/testfile.txt 
+          test -d luksvolume && echo "Executing 'ls'" && ls luksvolume
+          sleep 1
+          sumo -u luksvolume.luks
+          sleep 1 && rm luksvolume.luks
+      comment: |
+          A LUKS volume file is created hosting an 'exfat' file system. 
+          The size greater than 30M and password are freely manually entered. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+  createqcow2:
+    _categories: ["create-disk-file"]
+    _term-height: 50
+    _ignore-comment-for-manpage: yes
+    _title: |
+      Creating a QCOW2 volume file
+    _usage: sumo [OPTIONS] <disk file name>.qcow2 [target folder]  
+    1:
+      _categories: ["automatic"]
+      name: Example of creating a QCOW2 disk file with a 3Mo exfat, no prompting
+      pre-command: |
+          cd ~/test_sumo && rm -f ./qcow2disk.qcow2 && sync || echo "OK no qcow2disk.qcow2 disk exists"
+          sleep 3
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.qcow2
+      command : |        
+          # using -y most time the created partition is not recognized
+          sumo qcow2disk.qcow2 -o size=3M -t exfat
+      post-command-display:
+      post-command: |
+          sleep 2
+          [ -d qcow2disk ] && touch qcow2disk/testfile.txt 
+          test -d qcow2disk && echo "Executing 'ls'" && ls qcow2disk
+          sleep 2
+          sumo -u qcow2disk.qcow2
+          sleep 2 
+          rm qcow2disk.qcow2
+      comment: |
+          A QCOW2 disk file is created hosting an 'exfat' file system. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+    2:
+      #ignore: yes
+      _categories: ["manual"]
+      name: Example of creating a QCOW2 volume file with a default ext4 and entered size
+      pre-command: |
+          cd ~/test_sumo && rm -f ./qcow2disk.qcow2 && sync || echo "OK no qcow2disk.qcow2 disk exists"
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.qcow2
+      command : |        
+          sumo -y qcow2disk.qcow2
+      post-command-display:
+      post-command: |
+          sleep 2
+          [ -d qcow2disk ] && touch qcow2disk/testfile.txt 
+          test -d qcow2disk && echo "Executing 'ls'" && ls qcow2disk
+          sleep 2
+          sumo -u qcow2disk.qcow2
+          sleep 2
+          rm qcow2disk.qcow2
+      comment: |
+          A QCOW2 volume file is created hosting an 'ext4' file system. 
+          The size is freely manually entered. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+  createvdi:
+    _categories: ["create-disk-file"]
+    _term-height: 50
+    _ignore-comment-for-manpage: yes
+    _title: |
+      Creating a VDI volume file
+    _usage: sumo [OPTIONS] <disk file name>.vdi [target folder]  
+    1:
+      _categories: ["automatic"]
+      name: Example of creating a vdi disk file with a 3Mo exfat, no prompting for size
+      pre-command: |
+          cd ~/test_sumo
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.vdi
+      command : |        
+          sumo vdidisk.vdi -o size=3M -t exfat
+      post-command-display:
+      post-command: |
+          sleep 1
+          [ -d vdidisk ] && touch vdidisk/testfile.txt 
+          test -d vdidisk && echo "Executing 'ls'" && ls vdidisk
+          sleep 2
+          sumo -u vdidisk.vdi
+          sleep 1 
+          rm vdidisk.vdi
+      comment: |
+          A vdi disk file is created hosting an 'exfat' file system. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+    2:
+      #ignore: yes
+      _categories: ["manual"]
+      name: Example of creating a VDI volume file with a default ext4 and entered size
+      pre-command: |
+          cd ~/test_sumo
+      command-display : |
+          sumo [-L <label>] -o size=<size> [-t <filesystem name>] <file name>.vdi
+      command : |   
+          sumo -y vdidisk.vdi
+      post-command-display:
+      post-command: |
+          sleep 1
+          [ -d vdidisk ] && touch vdidisk/testfile.txt 
+          test -d vdidisk && echo "Executing 'ls'" && ls vdidisk
+          sleep 1
+          sumo -u vdidisk.vdi
+          sleep 1
+          rm vdidisk.vdi
+      comment: |
+          A VDI volume file is created hosting an 'ext4' file system. 
+          The size is freely manually entered. 
+          The image is mounted, a test file is written before its content inspected with 'ls', eventually unmounted.
+
+stderr_handling:
+  
+  apply-to-category-mount-command-line: histlist
+  apply-to-category-mount-console: video
+  apply-to-category-unmount-command-line: histlist
+  apply-to-category-unmount-console: video
+  apply-to-category-create-disk-file: histlist
+  apply-to-category-create-disk-file-console: video
+  apply-to-category-disk-op-command-line: histlist
+  apply-to-category-disk-op-console: video
+  apply-to-category-history: video
+  apply-to-category-autosetup: video
+
+  # Overriding the default templates with 'formatdisk' one
+  #flashdisk:
+  #  copy: formatdisk
+
+  umntlazy_i:    
+    copy: video
+
+  mntpoint:
+    prelude: |
+    epilog: |
+    step: |
+      ===== ${CMDDSP}
+      \n
+      ${COMMENT}
+      \n
+      [small,title="${IMG_TITLE}"]
+      ****
+      ${POSTCMDDSP}
+      \n
+      image::{staticimgdir}/${SCREENSHOT_IMAGE}[role="image_page", width={exampleimagewidth_smallscreen}, title=\"${IMG_TITLE}\", align="center",link={staticimgdir}/${SCREENSHOT_IMAGE}]
+      ****
+
+  histlist:
+    prelude: |
+      .Usage for ${PLAN_TITLE}
+      [source,bash]
+      ----
+      ${USAGE} 
+      ----
+      ${USAGE_INFO} 
+      \n
+      ifdef::large_screen[]
+      [cols="30%,45%,25%", title="${PLAN_TITLE}"]
+      |===
+      | Sample command | Output | Comments
+      \n
+      endif::[]
+
+    epilog: |
+      ifdef::large_screen[]
+      |===
+      endif::[]
+
+    step: |
+      ifdef::large_screen[]
+      a|
+      [source,bash]
+      ----
+      ${CMD}
+      ----
+      a| image::{staticimgdir}/${SCREENSHOT_IMAGE}[title=\"${IMG_TITLE}\", align="center",link={staticimgdir}/${SCREENSHOT_IMAGE}]
+      a| 
+      [small]
+      --
+      ${COMMENT}
+      --  
+      endif::[]
+        
+      ifndef::large_screen[]
+      [title="Sample command",source,bash]
+      ----
+      ${CMD}
+      ----
+      \n
+      [small,title="${IMG_TITLE}"]
+      ****
+      ${COMMENT}
+      \n
+      image::{staticimgdir}/${SCREENSHOT_IMAGE}[role="image_page", width={exampleimagewidth_smallscreen}, title=\"${IMG_TITLE}\", align="center",link={staticimgdir}/${SCREENSHOT_IMAGE}]
+      ****
+      endif::[]
+
+  list:
+    copy: histlist
+
+    prelude: |
+      ifdef::large_screen[]
+      [cols="15%,15%,40%,30%", title="${PLAN_TITLE}"]
+      |===
+      | Usage case | Command | Output | Comments
+      endif::[]
+      ifndef::large_screen[]
+      endif::[]
+
+    step: |
+      ifdef::large_screen[]
+      a| ${IMG_TITLE} a|
+      [%nowrap,source,bash]
+      ----
+      ${CMDDSP}
+      ${POSTCMDDSP}
+      ----
+      a| image::{staticimgdir}/${SCREENSHOT_IMAGE}[title=\"${IMG_TITLE}\", align="center",link={staticimgdir}/${SCREENSHOT_IMAGE}]
+      a| 
+      [small]
+      --
+      ${COMMENT}
+      --
+      endif::[]
+      \n
+      ifndef::large_screen[]
+      ===== ${IMG_TITLE}      
+      [title="Command to ${IMG_TITLE}",source,bash]
+      ----
+      ${CMDDSP}
+      ${POSTCMDDSP}
+      ----
+      v
+      [small,title="Sample output - ${IMG_TITLE}"]
+      ****
+      ${COMMENT}
+      \n
+      image::{staticimgdir}/${SCREENSHOT_IMAGE}[role="image_page", width={exampleimagewidth_smallscreen}, title=\"${IMG_TITLE}\", align="center",link={staticimgdir}/${SCREENSHOT_IMAGE}]
+      ****
+      endif::[]
+
+  video:
+    prelude: |
+      [cols="70%,30%", title="${PLAN_TITLE}"]
+      |===
+      | Video | Comments
+    epilog: |
+      |===
+    step: |
+      a| video::{staticimgdir}/${LIVE_RECORDING}[width="100%", title=\"${IMG_TITLE}\", align="center",link={staticimgdir}/${LIVE_RECORDING}]
+      a| 
+      [small]
+      --
+      ${COMMENT}
+      --  
+

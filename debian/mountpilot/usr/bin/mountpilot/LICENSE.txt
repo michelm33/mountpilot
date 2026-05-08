@@ -1,0 +1,31 @@
+"MountPilot" SOFTWARE LICENSE
+
+The "MountPilot" SOFTWARE consists of the 'sumo' backend control and all related sub-scripts
+
+Copyright (c) 2024-2026 Michel Mehl.
+All rights reserved - Tous droits réservés.
+
+The MountPilot product, inclusive the 'sumo' backend control script, documentation, 
+herein refered to as the 'Software', can be used free of charge. Therefore,
+
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR 
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, 
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL 
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR 
+OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, 
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR 
+OTHER DEALINGS IN THE SOFTWARE.
+
+Whilst the Software can be used free of charge, it remains the full ownership of the copyright holder.
+No commercial distribution, no reselling, no sublicensing, no derived commercial work are allowed 
+to be made of the Software by the Licensee without an express written agreement with the copyright holder, 
+whatsoever it regards the Software itself or any source code, documentation, tools part of it. 
+The Software is allowed to be integrated into an automated process, provided a prior notification
+and permission to use the company name and a basic description of the use which is made of it.
+
+The Licensee may adapt the Software for its own personal or corporate use only, but it is not allowed to 
+make a new public release of the Software. All aforementioned restrictions remain applicable
+in this case too.
+
+This agreement is made and shall be construed in accordance with the laws of France. 
+

@@ -1,0 +1,10 @@
+
+MountPilot & sumo backend control script
+
+Copyright (c) 2024-2026 Michel Mehl.
+All rights reserved. 
+Tous droits réservés (France).
+
+License terms written down in file LICENSE.txt
+Les termes de la licence sont détaillés dans le fichier LICENSE.txt
+

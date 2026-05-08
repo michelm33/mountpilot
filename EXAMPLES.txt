@@ -1,0 +1,231 @@
+
+*EXAMPLES*
+
+Examples of list commands
+
+  # Default List (everything but loop devices and docker overlays)
+   $ sumo -l
+
+  # List all except loop devices
+   $ sumo -l noloop
+
+  # List only real disks
+   $ sumo -l disk
+
+  # List only NTFS partitions
+   $ sumo -l ntfs
+
+  # List by searching the string 'adb'.
+   $ sumo -l adb
+
+  # List all available data sources incl. loop
+   $ sumo -l all
+
+  # Default list using the 'bgcolor' display format
+   $ sumo -l --display-format=bgcolor
+
+  # Default list using the 'color' display format
+   $ sumo -l --display-format=color
+
+Mounting using a system label
+
+  # An USB stick labeled 'photos' is mounted on the folder 'photosDir' and its content listed.
+   $ sumo -y -L photos ./photosDir
+
+Mounting a data source read-only
+
+  # A USB stick labeled 'photos' is mounted read-only on the folder 'photosDir'.
+   $ sumo -o ro -y -L photos ./photosDir
+
+Mounting a block device
+
+  # An USB key contains a flashed image of a Debian installation image.
+   $ sumo -y /dev/sdb ./DebianInstall
+
+Mounting a partition
+
+  # An USB key which partition is mapped to device `/dev/sdc1` is mounted on the folder 'photosDir'.
+   $ sumo -y /dev/sdc1 ./photosDir
+
+Mounting an overlay file system
+
+  # An overlay FS is created where 'demoUpperDir' is the overlaying upper dir and 'demoLowerDir' the overlaid lower dir.
+   $ sumo -y 'demoUpperDir>demoLowerDir' overlayDir
+
+Mounting an Android device via adb
+
+  # An Android tablet is mounted on folder '~/test_sumo/adb'.
+   $ sumo -y adb://usb  ~/test_sumo/adb
+
+Mounting a NFS shared directory
+
+  # The remote home of another host is mounted on folder 'testNFSDir'.
+   $ sumo -y 192.168.0.12:/home/michel testNFSDir
+
+Mounting a remote directory via SSH
+
+  # The remote home of another host is mounted on folder 'testRemoteDirSSH'.
+   $ sumo -y michel@riffian:. testRemoteDirSSH
+
+Mounting a Windows share
+
+  # The home of the remote Windows host 192.168.0.30 is mounted on folder 'windows'.
+   $ sumo -y //192.168.0.30/michel --user=michel --password=TH1_password ~/windows/
+
+Mounting a FTP directory
+
+  # Example of mounting a FTP directory using login and password, no existing .netrc_ftp.slashetc.fr
+  # The FTP site ftp://slash2438072@ftp.slashetc.fr is mounted on folder 'webftp'.
+   $ sumo -y ftp://slash2438072@ftp.slashetc.fr ~/webftp -p FTP_password
+
+  # Example of remounting a FTP directory using existing .netrc_ftp.slashetc.fr file
+  # The FTP site ftp://slash2438072@ftp.slashetc.fr is mounted on folder 'webftp'
+   $ sumo -y ftp://slash2438072@ftp.slashetc.fr ~/webftp
+
+Mounting Google Drive
+
+  # The Google Drive is mounted on folder 'drive'.
+   $ sumo -y https://drive.google.com drive
+
+Mounting a raw disk image
+
+  # The raw disk image is mounted on folder 'imgdisk'.
+   $ sumo -y imgdisk.img ./imgdisk
+
+Mounting a virtual machine disk
+
+  # The virtual disk image is mounted on folder 'imgdisk_qcow2'.
+   $ sumo -y imgdisk.qcow2 ./imgdisk_qcow2
+
+Mounting an existing VERA volume
+
+  # Example of mounting of a VERA volume which is a file
+  # The VERA disk file is mounted on folder 'veravol'.
+   $ sumo -y veradisk.vera ./veravol -p a
+
+  # Example of mounting of an existing VERA volume hosted on a device
+  # The VERA volume hosted on the device /dev/sdd1 (USB stick) is mounted on folder 'veravol'.
+   $ sumo -y /dev/sdd1 ./veravol -p a
+
+Mounting a LUKS volume
+
+  # Example of mounting of an existing LUKS volume which is a file
+  # The LUKS disk file is mounted on folder 'luksdisk'.
+   $ sumo -y luksdisk.luks ./luksdisk -p a
+
+  # Example of mounting of an existing LUKS volume hosted as a partition of a device
+  # The LUKS volume hosted on the device /dev/sdd1  (USB stick) is mounted
+   $ sumo -y /dev/sdd1 ./luksdisk -p a
+
+Mounting a nested data source
+
+  # There's a VERA volume file located on a Windows partition labeled 'WINDOWS11' (/dev/sda3).
+   $ sumo -y -L WINDOWS11 ~/WINDOWS11
+   $ sumo -y ~/WINDOWS11/Users/miche/Documents/vault/personnel-confidentiel.vera ~/vault # /dev/sda3
+
+Mounting LVM volumes
+
+  # The data source is here a full Debian9 VM disk that has been partitionned with LVM.
+   $ sumo -y ~/riffian/Data/Machines/backuprepo-amd64.qcow2 ~/vmdisk || echo "Normal failure, as swap cannot be mounted"
+
+Unmounting using the mountpoint folder
+   $ sumo -u ~/photosDir
+
+Unmounting using the device label
+   $ sumo -u -L photos
+
+Unmounting using the data source location
+
+  # Example of unmounting using the NFS URL
+   $ sumo -s -u riffian:/home/michel/Data/Scan
+
+  # Example of unmounting using the SSH URL
+   $ sumo -s -u michel@riffian:Data/Scan
+
+  # Example of unmounting using the UNC address
+   $ sumo -s -u //192.168.0.30/michel
+
+  # Example of unmounting using the FTP URL
+   $ sumo -s -u ftp://slash2438072@ftp.slashetc.fr
+
+  # Example of unmounting using the Google Drive URL
+   $ sumo -s -u https://drive.google.com
+
+  # Example of unmounting using VERA volume file
+   $ sumo -s -u veradisk.vera
+
+  # Example of unmounting using LUKS volume file
+   $ sumo -s -u luksdisk.luks
+
+  # Example of unmounting using a virtual machine disk file
+   $ sumo -s -u imgdisk.qcow2
+
+Lazy unmounting
+
+  # A local USB stick and remote SSH folder are mounted.
+   $ sumo --lazy -u ~/mnt/testRemoteDirSSH
+   $ sumo --lazy -u -L photos 
+
+Listing available mount histories
+   $ sumo -H
+
+Formatting a disk
+
+  # Example of creating on disk a file system (ext4) located on a single partition
+  # When prompted, 'n' (no) is automatically entered to disable a partitionless formatting.
+   $ sumo -F -t ext4 /dev/sdb <<< 'n'
+
+  # Example of creating an exfat disk without partition
+  # When prompted, 'y' (yes) is entered to enable partitionless formatting.
+   $ sumo -y -F -t exfat /dev/sdb
+
+Creating a disk partition
+
+  # Example of creating a single partition of type Microsoft Basic data partition
+   $ sumo -y -P EBD0A0A2-B9E5-4433-87C0-68B6B72699C7 /dev/sdb
+
+Flashing a disk
+
+  # Example of flashing a Linux installation image
+  # This example flashes a mini installation image of Debian labeled 'CDROM'.
+   $ sumo -y -B ~/riffian/Data/Softlib/images\ iso/mini.iso /dev/sdb
+
+Creating a raw disk image file
+
+  # Example of creating a raw disk image file with a 1Mo ext2, no prompting
+   $ sumo -y rawdisk.img -o size=1M -t ext2
+
+  # Example of creating a raw disk image file with default ext4 and entered size 900K
+   $ sumo -y rawdisk.img
+
+Creating a VERA volume file
+
+  # Example of creating a VERA volume file with a 2Mo exfat, no prompting
+   $ sumo -y veravolume.vera -o size=2M -t exfat -p mypassword
+
+  # Example of creating a VERA volume file with a exfat and entered size 3M and password
+   $ sumo -y veravolume.vera -t exfat
+
+Creating a LUKS volume file
+
+  # Example of creating a LUKS volume file with a 30Mo exfat, no prompting
+   $ sumo -y luksvolume.luks -o size=30M -t exfat -p mypassword
+
+  # Example of creating a LUKS volume file with a exfat and entered size 30M and password
+   $ sumo -y luksvolume.luks -t exfat
+
+Creating a QCOW2 volume file
+
+  # Example of creating a QCOW2 disk file with a 3Mo exfat, no prompting
+   $ sumo qcow2disk.qcow2 -o size=3M -t exfat
+
+  # Example of creating a QCOW2 volume file with a default ext4 and entered size
+   $ sumo -y qcow2disk.qcow2
+
+Creating a VDI volume file
+
+  # Example of creating a vdi disk file with a 3Mo exfat, no prompting for size
+   $ sumo vdidisk.vdi -o size=3M -t exfat
+
+  # Example of creating a VDI volume file with a default ext4 and entered size
+   $ sumo -y vdidisk.vdi

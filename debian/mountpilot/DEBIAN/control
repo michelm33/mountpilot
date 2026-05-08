@@ -1,0 +1,10 @@
+Package: mountpilot
+Version: 2.0-2
+Architecture: amd64
+Maintainer: Michel Mehl <michel.mehl@slashetc.fr>
+Installed-Size: 1130
+Section: misc
+Priority: optional
+Homepage: https://slashetc.fr/en/products/mountpilot/
+Description: Wrapper for all mount methods existing on Linux system.
+ MountPilot integrates into one tool various mount methods for heterogeneous data sources. It can be used either as command line or via an interactive terminal console.

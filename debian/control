@@ -1,0 +1,13 @@
+Source: mountpilot
+Maintainer: Michel Mehl <michel.mehl@slashetc.fr>
+Section: misc
+Priority: optional
+Standards-Version: 4.7.0
+Build-Depends: debhelper-compat (= 13)
+
+Package: mountpilot
+Homepage: https://slashetc.fr/en/products/mountpilot/
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Wrapper for all mount methods existing on Linux system.
+ MountPilot integrates into one tool various mount methods for heterogeneous data sources. It can be used either as command line or via an interactive terminal console.

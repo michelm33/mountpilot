@@ -1,0 +1,639 @@
+MOUNTPILOT(8)                                              System Administration Utilities                                             MOUNTPILOT(8)
+
+NAME
+       MountPilot - A mount and monitoring tool for heterogeneous data sources
+
+SYNOPSIS
+       sumo  OPTIONS  <block device path | disk file name| overlay path | ADB URL | NFS URL | FTP URL | SSH URL | SAMBA URL | UNC address | HTTP ad‐
+       dress> [<mount folder>]
+       sumo OPTIONS -L|--label= <volume label> [<mount folder>]
+       sumo OPTIONS -u <mount point folder>
+       sumo OPTIONS -u -L <volume label>
+       sumo OPTIONS -u <block device path | disk file name| overlay path | ADB URL | NFS URL | FTP URL | SSH URL | SAMBA URL | UNC  address  |  HTTP
+       address>
+       sumo OPTIONS -F|--format-disk -t <filesystem type> <block device path>
+       sumo OPTIONS -B|--flash-disk= <disk image> <block device path>
+       sumo OPTIONS -P|--part-disk= <partition GUID>
+       sumo OPTIONS [-l] [coma-separated list of filter names]
+       sumo OPTIONS [-i]
+
+       Arguments:
+
+       <block device path>
+              e.g. /dev/sda, /dev/sdb1, /dev/loop23
+
+       <disk file>
+              disk file path (.img,.qcow2,.vdi,.vera,.luk). If inexistent, it is proposed to create it.
+
+       overlay path
+              <upper_dir>><lower_dir> an overlay file system where the upper directory and the lower directory are separated by '>'.  When there are
+              multiple  lower dirs, the lowest is always put at the right most position and all dirs are separated by '>' as well.  Note: The 'work'
+              directory as documented for overlay systems is transparently created at the same level dir as 'upperdir'
+
+       ADB URL
+              adb://usb
+
+       NFS URL
+              nfs://<host>:<remote_dir>
+
+       FTP URL
+              ftp://[<login>@]<host>[:<port>]
+
+       SSH URL
+              [ssh://]<login>@<host>[:<port>]
+
+       SAMBA URL
+              [smb:]//[<login>:[<password>]@]<host>/<share>
+
+       UNC address
+              //<host>/<share>
+
+       HTTP URL
+              https://<host>. Only https://drive.google.com supported.
+
+       <mount folder>
+              Target mount point (it is a folder).
+
+       OPTIONS:
+
+       --volume-name =STRING
+              The name for an encrypted volume
+
+       -P, --part-disk =PART_TYPE_UUID
+              Partition a disk.
+
+       -i, --interactive
+              runs in interactive mode (dashboard)
+
+       -B, --flash-disk =FILENAME
+              Flashes a disk image to a device
+
+       --windows
+              Shows free Windows partition(s)
+
+       --display-format =bolddisk | color | bgcolor
+              Shows the list in the specified format (bolddisk,color,bgcolor)
+
+       --lazy Perform a lazy mount
+
+       -n, --no-headers
+              Hide headers and formatting frames
+
+       -l, --list =[FILTER[,FILTER...]]
+              List all available devices and data sources
+
+       -u     Unmounts the specified data source or mountpoint folder
+
+       -y     Assume 'Yes' when prompted for confirmation
+
+       --log =<arg>
+              Show the log tail
+
+       -M, --monitoring-time =SECONDS
+              Timeout for refreshing list in dashboard
+
+       --refresh-deps =[smb, luks, vera, qemu, sshfs, google-drive-ocamlfuse, all, <<apt package>>] Refreshes installation of dependency packages
+
+       --ghost
+              Do not record any history
+
+       -U, --user =STRING
+              User name to use when data source requests it
+
+       -t, --fs-type =STRING
+              File system to install when creating a new disk file
+
+       -a, --all
+              Unmounts all contained partitions and nested data sources
+
+       -L, --label =STRING
+              Label to use for selecting data source to mount/unmount
+
+       -f, --force
+              Assume 'Yes' when -y is not applicable
+
+       -H, --history =[HISTORY_NAME[:CURRENT_HISTORY_SAVE_NAME]] Use history of the specified name
+
+       -p, --password =STRING
+              Password/passphrase to use when data source requests it
+
+       -o, --options =OPTION=STRING[,OPTION=STRING...] Mount options for the low-level backend mount tools
+
+       -s, --silent
+              Less messages on stdout
+
+       -F, --format-disk
+              Format a block device as a disk
+
+       --files
+              Lists all the files used by the app (config, log etc)
+
+DESCRIPTION
+       Mountpilot integrates into one tool various mount methods existing on Linux systems, while also providing an live  interface  for  monitoring
+       and interacting with running or past mounts.
+
+       The  integrated  mount  functions enable to mount on the local file system a large variety of data sources from a single unified command-line
+       interface (CLI). Once 'mounted', the files of the source can be accessed locally from the mountpoint folder, as if  they  were  local  files.
+       Data sources may be as diverse as local disks, mobile devices, network connections and disk files.
+
+       The mount functions are supplemented by auto-installation of dependency packages and auto-login setups to access remote sources.
+
+       In addition, it also provides basic disk creation and manipulation functions, with seamless handling of encryption.
+
+       sumo  is  MountPilot's  back-end command line tool to perform the mount/unmount operations and disk operations.  Most operations are actually
+       achieved by sumo, which is either launched manually by the user or launched in background from the dashboard.
+
+       Passing option '-i-' launches MountPilot itself, i.e. the dashboard on the current terminal.
+
+       This manpage mainly focuses on the command usage and options documentation, as well as concret examples to use the tool.  The full documenta‐
+       tion is available at address https://slashetc.fr/mountpilot
+
+       SYSTEM PRIVILEDGES
+
+              This script requires to execute most underlying system command with root priviledges.  It should be ensured the user is granted  sudo.
+              It is recommended to deactivate password entry and have 24h timeout
+
+       OPTIONS DETAILS:
+
+       --volume-name <arg>
+
+              By  default,  the  file base name is used as volume name for encrypted files like LUKS.  This option enables to specify an alternative
+              names, which can be useful when a previous mount could not be ended properly, which may make the previous volume name unusable.
+
+       -P,--part-disk <arg>
+
+              Partition a disk. At the moment, it is only possible to create a single partition occupying whole disk.
+
+              The following types of partitions are also excluded:
+
+              - Linux root *
+
+              - Linux user *
+
+              - Verity root *
+
+              - Verity user *
+
+              - Verity root signature *
+
+              For advanced users, use any of the following: fdisk, sfdisk, gdisk, sgdisk.  Note fdisk and gdisk are deemed  for  interactive  opera‐
+              tions.
+
+       -i,--interactive
+
+              Runs  the dashboard showing the list of devices and mounted data sources as interative menu, where actions can be performed on the se‐
+              lected item, e.g. mounting/unmounting by with <enter>
+
+       -B,--flash-disk <arg>
+
+              Flashes a disk image the specific devce using the 'dd' utility. Typically, the disk image can be a raw image (.img) or an ISO image.
+
+              Most live CD images are hybrid ISO and so this function is also suitable to create bootable images without requiring an external tool.
+              If the ISO is not hybrid, it can be made so using the isohybrid command (sudo apt install syslinux-utils)
+
+              Flashing a disk image will result in the total loss of any data stored previously on the device.  This option has no effect if a  net‐
+              work device is specified.
+
+       --windows
+
+              Shows free Windows partition(s).  This option is equilavent to :
+
+              sumo -n -l noloop,ntfs,free
+
+       --display-format <arg>
+
+              Select a display format among the following:
+
+              - 'bolddisk': the line corresponding to actual disks are displayed in bold
+
+              - 'bgcolor': disks and related sub items like partitions are shown with a specific background color
+
+              - 'color': disks and related sub items like partitions are shown with a specific font color
+
+       --lazy
+
+              Proceed with a lazy unmount.
+
+       -n,--no-headers
+
+              Do not display headers nor any additional formatting frames.
+
+       -l,--list
+
+              By default, lists all available devices and data sources along with their mounting status and other information.
+
+              The list can be filtered or enhanced with a coma-separated list of keywords. Possible filters:
+
+              - all: Display absolutely all data sources, including loop devices.
+
+              - free: Only show not mounted data sources
+
+              -  <BLK_TYPE>:  Only list data sources of the specified type of block device. It's a device type as returned by 'lsblk'. E.g.: 'disk',
+              'loop'.
+
+              - <FS_TYPE> : Only list data sources of the  specified  type  of  file  system.  It's  a  file  system  type  as  returned  by  'blkid
+              --list-filesystems'. E.g. 'ntfs', 'ext4'.
+
+              - <SEARCH STRING>: Do list those data sources which file system type or source location contains the specified string. Note the string
+              is searched only after its has been searched for a block type or FS type matching exactly that string
+
+              - no<__filter name__> :Excludes data sources that would have been selected using the specified filter name. E.g. 'noloop' excludes all
+              loop devices, 'nodisk' excludes all disks.
+
+              By default, the loop devices are not displayed. This behavior is programmed in the configuration file.
+
+              The -n, --display-format options enable to control look&feel of the list.
+
+       -u
+
+              Tries to unmounts the specified device, which can be a block device path, a disk filename or a label.
+
+       -y
+
+              Assume 'Yes' answer for any confirmation request
+
+       --log
+
+              Show the log tail.
+
+       -M,--monitoring-time <arg>
+
+              The monitoring timeout for refreshing the dashboard.
+
+       --refresh-deps
+
+              Refreshes installation of dependency packages.  When no dependency name is specified following the option, only the relevant dependen‐
+              cies  are  installed on demand depending on the used functionality.  If an explicit dependency name is specified, then the script will
+              attempt to reinstall the matching dependencies immediately at startup.  Supported predefined dependency names are :  all,  smb,  vera,
+              luks, qemu, google-drive-ocamlfuse.  Otherwise, it will be attempted to install a Debian package of the specified name.
+
+              Note that for specific mounts like with google-drive-ocamlfuse, this may imply a more complex process that just a system package rein‐
+              stallation, whereby actions from the users may be required.
+
+       --ghost
+
+              With  this  option,  the history file is not updated. The history is still shown on the dashboard, but there won't be any trace of the
+              mount operations in the history file.
+
+       -U,--user <arg>
+
+              Enables automated input of use name when data source requests it, like VERA, LUKS, SSH etc.
+
+       -t,--fs-type <arg>
+
+              File system type when a new disk file system is created by default, it is ext4.
+
+       -a,--all
+
+              When unmounting a data source requires to unmount multiple child data sources, or if the data source is mounted multiple time,  speci‐
+              fying this option allows to proceed to the unmounting of all of them.
+
+       -L,--label <arg>
+
+              A logical name associated with the disk. It is often a convenient way to address the device regardless of the actual mount location or
+              device path.  The label shall be no longer than 16 chars. This is due a limitation on some systems (like unix)
+
+              For Vera volumes, only integer values are accepted. By extension, if the label
+
+              specified for any operation is an integer number, a Vera disk is assumed.
+
+       -f,--force
+
+              Force proceeding for cases where -y is not operating.
+
+       -H,--history
+
+              Tells  sumo  to use the history of the specified name. The matching history file is expected to be named recent.yml.<history name> lo‐
+              cated in ~/.config/Sumo folder.
+
+              The previous history recent.yml is renamed to recent.yml.old or recent.yml.CURRENT_HISTORY_SAVE_NAME if  CURRENT_HISTORY_SAVE_NAME  is
+              specified
+
+              Without argument, this option lists the names of the available histories.
+
+       -p,--password <arg>
+
+              Enables  automated  input  of  password/passphrase when data source requests it, like VERA, LUKS, SSH etc.  Be careful not passing the
+              passphrase directly in clear text on command line.  Ignored if disk is not encrypted
+
+       -o,--options <arg>
+
+              This option enables to forward mount options to the low-level mount tools.
+
+              In the context of disk creation, the option value "size=<disk size>" enables to predefine the size of the disk to create without  hav‐
+              ing  to enter it manually when prompted. <disk size> shall be given as an integer followed by any of K,M,G,T resp. KiB, MiB, GiB, TiB.
+
+       -s,--silent
+
+              Do not show the device mounting details after successful mounting/unmounting.
+
+       -F,--format-disk
+
+              This option enables to format the input block device as a single-partition disk on which is installed the file system given  as  argu‐
+              ment to this option.
+
+              Formatting  the device will result in the total loss of any data stored previously on the block device.  This option has not effect if
+              a network device is specified.
+
+              The format function is not available and shall not be used from plain command line. This option is used when sumo is called  from  the
+              dashboard, whereby it also passes the --caller option.
+
+       --files
+
+              Lists the files used by the app, i.e. configuration file, log file(s), active history file, any cache file
+
+LIMITATIONS
+       File system labels containing spaces are not supported.
+
+EXAMPLES
+       Examples of list commands
+
+              # Default List (everything but loop devices and docker overlays)
+
+              $ sumo -l
+
+              # List all except loop devices
+
+              $ sumo -l noloop
+
+              # List only real disks
+
+              $ sumo -l disk
+
+              # List only NTFS partitions
+
+              $ sumo -l ntfs
+
+              # List by searching the string 'adb'.
+
+              $ sumo -l adb
+
+              # List all available data sources incl. loop
+
+              $ sumo -l all
+
+              # Default list using the 'bgcolor' display format
+
+              $ sumo -l --display-format=bgcolor
+
+              # Default list using the 'color' display format
+
+              $ sumo -l --display-format=color
+
+       Mounting using a system label
+
+              # An USB stick labeled 'photos' is mounted on the folder 'photosDir' and its content listed.
+
+              $ sumo -y -L photos ./photosDir
+
+       Mounting a data source read-only
+
+              # A USB stick labeled 'photos' is mounted read-only on the folder 'photosDir'.
+
+              $ sumo -o ro -y -L photos ./photosDir
+
+       Mounting a block device
+
+              # An USB key contains a flashed image of a Debian installation image.
+
+              $ sumo -y /dev/sdb ./DebianInstall
+
+       Mounting a partition
+
+              # An USB key which partition is mapped to device `/dev/sdc1` is mounted on the folder 'photosDir'.
+
+              $ sumo -y /dev/sdc1 ./photosDir
+
+       Mounting an overlay file system
+
+              # An overlay FS is created where 'demoUpperDir' is the overlaying upper dir and 'demoLowerDir' the overlaid lower dir.
+
+              $ sumo -y 'demoUpperDir>demoLowerDir' overlayDir
+
+       Mounting an Android device via adb
+
+              # An Android tablet is mounted on folder '~/test_sumo/adb'.
+
+              $ sumo -y adb://usb  ~/test_sumo/adb
+
+       Mounting a NFS shared directory
+
+              # The remote home of another host is mounted on folder 'testNFSDir'.
+
+              $ sumo -y 192.168.0.12:/home/michel testNFSDir
+
+       Mounting a remote directory via SSH
+
+              # The remote home of another host is mounted on folder 'testRemoteDirSSH'.
+
+              $ sumo -y michel@riffian:. testRemoteDirSSH
+
+       Mounting a Windows share
+
+              # The home of the remote Windows host 192.168.0.30 is mounted on folder 'windows'.
+
+              $ sumo -y //192.168.0.30/michel --user=michel --password=TH1_password ~/windows/
+
+       Mounting a FTP directory
+
+              #   Example   of   mounting   a  FTP  directory  using  login  and  password,  no  existing  .netrc_ftp.slashetc.fr  #  The  FTP  site
+              ftp://slash2438072@ftp.slashetc.fr is mounted on folder 'webftp'.
+
+              $ sumo -y ftp://slash2438072@ftp.slashetc.fr ~/webftp -p FTP_password
+
+              # Example of remounting a FTP directory using existing .netrc_ftp.slashetc.fr file # The FTP  site  ftp://slash2438072@ftp.slashetc.fr
+              is mounted on folder 'webftp'
+
+              $ sumo -y ftp://slash2438072@ftp.slashetc.fr ~/webftp
+
+       Mounting Google Drive
+
+              # The Google Drive is mounted on folder 'drive'.
+
+              $ sumo -y https://drive.google.com drive
+
+       Mounting a raw disk image
+
+              # The raw disk image is mounted on folder 'imgdisk'.
+
+              $ sumo -y imgdisk.img ./imgdisk
+
+       Mounting a virtual machine disk
+
+              # The virtual disk image is mounted on folder 'imgdisk_qcow2'.
+
+              $ sumo -y imgdisk.qcow2 ./imgdisk_qcow2
+
+       Mounting an existing VERA volume
+
+              # Example of mounting of a VERA volume which is a file # The VERA disk file is mounted on folder 'veravol'.
+
+              $ sumo -y veradisk.vera ./veravol -p a
+
+              #  Example  of  mounting of an existing VERA volume hosted on a device # The VERA volume hosted on the device /dev/sdd1 (USB stick) is
+              mounted on folder 'veravol'.
+
+              $ sumo -y /dev/sdd1 ./veravol -p a
+
+       Mounting a LUKS volume
+
+              # Example of mounting of an existing LUKS volume which is a file # The LUKS disk file is mounted on folder 'luksdisk'.
+
+              $ sumo -y luksdisk.luks ./luksdisk -p a
+
+              # Example of mounting of an existing LUKS volume hosted as a partition of a device # The LUKS volume hosted on  the  device  /dev/sdd1
+              (USB stick) is mounted
+
+              $ sumo -y /dev/sdd1 ./luksdisk -p a
+
+       Mounting a nested data source
+
+              # There's a VERA volume file located on a Windows partition labeled 'WINDOWS11' (/dev/sda3).
+
+              $ sumo -y -L WINDOWS11 ~/WINDOWS11
+              $ sumo -y ~/WINDOWS11/Users/miche/Documents/vault/personnel-confidentiel.vera ~/vault # /dev/sda3
+
+       Mounting LVM volumes
+
+              # The data source is here a full Debian9 VM disk that has been partitionned with LVM.
+
+              $ sumo -y ~/riffian/Data/Machines/backuprepo-amd64.qcow2 ~/vmdisk || echo "Normal failure, as swap cannot be mounted"
+
+       Unmounting using the mountpoint folder
+
+              $ sumo -u ~/photosDir
+
+       Unmounting using the device label
+
+              $ sumo -u -L photos
+
+       Unmounting using the data source location
+
+              # Example of unmounting using the NFS URL
+
+              $ sumo -s -u riffian:/home/michel/Data/Scan
+
+              # Example of unmounting using the SSH URL
+
+              $ sumo -s -u michel@riffian:Data/Scan
+
+              # Example of unmounting using the UNC address
+
+              $ sumo -s -u //192.168.0.30/michel
+
+              # Example of unmounting using the FTP URL
+
+              $ sumo -s -u ftp://slash2438072@ftp.slashetc.fr
+
+              # Example of unmounting using the Google Drive URL
+
+              $ sumo -s -u https://drive.google.com
+
+              # Example of unmounting using VERA volume file
+
+              $ sumo -s -u veradisk.vera
+
+              # Example of unmounting using LUKS volume file
+
+              $ sumo -s -u luksdisk.luks
+
+              # Example of unmounting using a virtual machine disk file
+
+              $ sumo -s -u imgdisk.qcow2
+
+       Lazy unmounting
+
+              # A local USB stick and remote SSH folder are mounted.
+
+              $ sumo --lazy -u ~/mnt/testRemoteDirSSH
+              $ sumo --lazy -u -L photos
+
+       Listing available mount histories
+
+              $ sumo -H
+
+       Formatting a disk
+
+              # Example of creating on disk a file system (ext4) located on a single partition # When prompted, 'n' (no) is automatically entered to
+              disable a partitionless formatting.
+
+              $ sumo -F -t ext4 /dev/sdb <<< 'n'
+
+              # Example of creating an exfat disk without partition # When prompted, 'y' (yes) is entered to enable partitionless formatting.
+
+              $ sumo -y -F -t exfat /dev/sdb
+
+       Creating a disk partition
+
+              # Example of creating a single partition of type Microsoft Basic data partition
+
+              $ sumo -y -P EBD0A0A2-B9E5-4433-87C0-68B6B72699C7 /dev/sdb
+
+       Flashing a disk
+
+              # Example of flashing a Linux installation image # This example flashes a mini installation image of Debian labeled 'CDROM'.
+
+              $ sumo -y -B ~/riffian/Data/Softlib/images\ iso/mini.iso /dev/sdb
+
+       Creating a raw disk image file
+
+              # Example of creating a raw disk image file with a 1Mo ext2, no prompting
+
+              $ sumo -y rawdisk.img -o size=1M -t ext2
+
+              # Example of creating a raw disk image file with default ext4 and entered size 900K
+
+              $ sumo -y rawdisk.img
+
+       Creating a VERA volume file
+
+              # Example of creating a VERA volume file with a 2Mo exfat, no prompting
+
+              $ sumo -y veravolume.vera -o size=2M -t exfat -p mypassword
+
+              # Example of creating a VERA volume file with a exfat and entered size 3M and password
+
+              $ sumo -y veravolume.vera -t exfat
+
+       Creating a LUKS volume file
+
+              # Example of creating a LUKS volume file with a 30Mo exfat, no prompting
+
+              $ sumo -y luksvolume.luks -o size=30M -t exfat -p mypassword
+
+              # Example of creating a LUKS volume file with a exfat and entered size 30M and password
+
+              $ sumo -y luksvolume.luks -t exfat
+
+       Creating a QCOW2 volume file
+
+              # Example of creating a QCOW2 disk file with a 3Mo exfat, no prompting
+
+              $ sumo qcow2disk.qcow2 -o size=3M -t exfat
+
+              # Example of creating a QCOW2 volume file with a default ext4 and entered size
+
+              $ sumo -y qcow2disk.qcow2
+
+       Creating a VDI volume file
+
+              # Example of creating a vdi disk file with a 3Mo exfat, no prompting for size
+
+              $ sumo vdidisk.vdi -o size=3M -t exfat
+
+              # Example of creating a VDI volume file with a default ext4 and entered size
+
+              $ sumo -y vdidisk.vdi
+
+AUTHOR
+       Written by Michel Mehl
+
+REPORTING BUGS
+       Report bugs to <michel.mehl@slashetc.fr>
+
+COPYRIGHT
+       Copyright © 2024-2026 Michel Mehl.  All rights reserved.  Tous droits réservés (France).
+
+       License terms written down in file LICENSE.txt Les termes de la licence sont détaillés dans le fichier LICENSE.txt
+
+MountPilot sumo 2.0.2                                                 May 2026                                                         MOUNTPILOT(8)

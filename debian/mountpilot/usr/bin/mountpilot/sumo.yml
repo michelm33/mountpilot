@@ -1,0 +1,73 @@
+#!/bin/bash
+###############################################################################
+# 
+# MountPilot & sumo backend control script
+# 
+# Copyright (c) 2024-2026 Michel Mehl.
+# All rights reserved. 
+# Tous droits réservés (France).
+# 
+# License terms written down in file LICENSE.txt
+# Les termes de la licence sont détaillés dans le fichier LICENSE.txt
+# 
+# Release file path: sumo.yml
+# Release file date: 2026-05-08 15:10
+# Software product version: 2.0.2
+# Source file last modification: 2026-05-08 12:23:30.556929733 +0000
+#
+# This header was generated. Do not modify.
+#
+# ------------------------------------------------------------------------------
+#
+# sumo's default configuration file
+#
+# type 'man sumo' for further information.
+#
+# ------------------------------------------------------------------------------
+# 
+# Report bugs and suggestions: 
+#     assistance@slashetc.fr
+# 
+# Specific or corporate requirements or extensions: 
+#     info@slashetc.fr
+# 
+# The author is overall not required to provide maintenance or support 
+# outside specific commercial terms agreed.
+# 
+###############################################################################
+display format: bolddisk
+vera creation options : --protect-hidden=no --volume-type="normal" --encryption="Serpent-AES" --hash="SHA-512" -k "" --pim=0 --quick
+vera version: 1.26.24 1.26.14
+vera download url debian: https://launchpad.net/veracrypt/trunk/%%version%%/+download/%%name%%-%%version%%-%%distroname%%-%%distrovermajor%%-%%arch%%.deb
+#vera download url debian: https://launchpad.net/veracrypt/trunk/%%version%%/+download/%%name%%-%%version%%-%%distroname%%-11-%%arch%%.deb
+vera download url ubuntu: https://launchpad.net/veracrypt/trunk/%%version%%/+download/%%name%%-%%version%%-%%distroname%%-%%distrovermajor%%.04-%%arch%%.deb
+#vera download url ubuntu: https://launchpad.net/veracrypt/trunk/%%version%%/+download/%%name%%-%%version%%-%%distroname%%-%%distrover%%-%%arch%%.deb
+devtype: noloop,nodocker
+browser: nautilus
+key shortcuts: d:255,r:64+?,u:253,i:252,b:251,e:250,h:249,l:248,f:247,F:246,P:245,g:244
+show details: yes
+show history: yes
+monitoring time: 1
+security mask: 0077
+mount options google-drive-ocamlfuse: -o allow_other -o auto_unmount
+mount options ssh: -o allow_other,reconnect,ConnectTimeout=15,ServerAliveInterval=30,ServerAliveCountMax=4000
+#mount options ssh: -o allow_root
+mount options ftp: -o allow_other
+#mount options ftp: no_verify_hostname,ssl
+ftp server packages: vsftpd pureftp
+mount options nfs: -o soft,timeo=10,retrans=3
+nfs remote server login: $USER
+# no_root_squash means a root can mount a distant folder as root as well, otherwise it is mounted as 'nobody'
+# root squashing is safer in public/corporate networks
+nfs exports options: rw,sync,no_subtree_check,no_root_squash,crossmnt
+mount options adb: -o allow_root,uid=$(id -u),gid=$(id -g)
+# The directory inside which the adbfs-rootless git repo is cloned. 
+# Once clone, $HOME/adbfs-rootless/adbfs-rootless is expected to be there
+adbfs build dir: $HOME/mountpilot-deps
+adbfs install dir: /usr/local/bin
+adbfs git repo: https://github.com/spion/adbfs-rootless
+ppa google-drive-ocamlfuse: ppa:alessandro-strada/ppa
+apt google-drive-ocamlfuse: google-drive-ocamlfuse
+google client id: todo
+google secret id: todo
+

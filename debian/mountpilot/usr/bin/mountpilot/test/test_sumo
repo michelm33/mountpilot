@@ -1,0 +1,18 @@
+#!/bin/bash
+BASEDIR=$(readlink -f $(dirname ${BASH_SOURCE[0]}))
+TEST_SOURCE_DIR="$(realpath "${BASEDIR}/..")"
+TEST_SHOT_PLAN_DIR="$(realpath "${BASEDIR}/../../shotplan")"
+
+cat<<EOF
+
+Running the test
+
+This test the sumo installation located in /usr/bin
+
+Please ensure the release package has been generated using 'make release'
+
+EOF
+
+source "${TEST_SOURCE_DIR}/test/local_test_vars.sh"
+
+"${TEST_SHOT_PLAN_DIR}/shotplan" "${TEST_SOURCE_DIR}/test/_shotplan.yml" $*
